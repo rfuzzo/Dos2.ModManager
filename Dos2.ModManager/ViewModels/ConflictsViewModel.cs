@@ -56,6 +56,15 @@ namespace Dos2.ModManager.ViewModels
             {
                 foreach (string file in mod.Files)
                 {
+                    string[] hidden = new string[] { "Assets", "Content" };
+
+                    string first = file.Split('/').First();
+                    if (hidden.Contains(first))
+                    {
+                        continue;
+                    }
+
+
                     if (mod2compare.Files.Contains(file))
                     {
                         string type = "";

@@ -13,6 +13,7 @@ namespace Dos2.ModManager
     public abstract class ObservableObject : INotifyPropertyChanged, INotifyPropertyChanging
     {
         #region NotifyPropertyChanged
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         /// <summary>
         /// Invoke the PropertyChanged event using the caller property name with <see cref="CallerMemberNameAttribute"/>.
@@ -25,6 +26,7 @@ namespace Dos2.ModManager
         #endregion
 
         #region NotifyPropertyChanging
+        [field: NonSerialized]
         public event PropertyChangingEventHandler PropertyChanging;
         /// <summary>
         /// Invoke the PropertyChanging event using the caller property name with <see cref="CallerMemberNameAttribute"/>.

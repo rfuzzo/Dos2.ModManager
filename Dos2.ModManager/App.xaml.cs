@@ -37,6 +37,13 @@ namespace Dos2.ModManager
 
         private void InitAppSetting()
         {
+            //debug
+            Dos2.ModManager.Properties.Settings.Default.Divine = @"E:\moddingdir_dos2\TOOLS\divine\divine.exe";
+            Dos2.ModManager.Properties.Settings.Default.Mods = @"E:\moddingdir_dos2\Larian Studios\Divinity Original Sin 2 Definitive Edition\graphicSettings.lsx";
+            Dos2.ModManager.Properties.Settings.Default.Dos2 = @"C:\Steam\steamapps\common\Divinity Original Sin 2\DefEd\bin\EoCApp.exe";
+
+            //debug
+
 
             //Divine Path
             if (Dos2.ModManager.Properties.Settings.Default.Divine == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Divine))

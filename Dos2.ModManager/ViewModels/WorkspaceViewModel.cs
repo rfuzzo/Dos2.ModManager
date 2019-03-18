@@ -171,6 +171,7 @@ namespace Dos2.ModManager.ViewModels
             //MOD DATA
             //Get Mod Info
             GetModDataAsync();
+            
 
             //apply profile info to list (enable/disable mod and change load order)
             //ApplyModSettings();
@@ -180,6 +181,8 @@ namespace Dos2.ModManager.ViewModels
 
 
         }
+
+        
 
         /*private void mods_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -253,8 +256,16 @@ namespace Dos2.ModManager.ViewModels
 
                 List<string> modFiles = Directory.GetFiles(modDir).ToList();
 
-                foreach (var modPath in modFiles)
+                //Logging Start
+                ParentViewModel.Logger.ProgressValue = 0;
+                ParentViewModel.Logger.IsIndeterminate = false;
+
+                for (int i = 0; i < modFiles.Count; i++)
                 {
+                    string modPath = modFiles[i];
+
+                    
+
                     //get UUID
                     string uuid = Path.GetFileNameWithoutExtension(modPath).Split('_').Last();
                     string meta = "";
@@ -270,19 +281,7 @@ namespace Dos2.ModManager.ViewModels
                         Dos2Mod mod = InterpretModMeta(meta);
                         //Dos2Mod mod = await Task.Run(() => InterpretModMeta(meta));
 
-                        //get file list
-                        var rawoutput = await Task.Run(() => GetFileListForPak(modPath));
-                        var fileList = new List<string>();
-                        foreach (var item in rawoutput)
-                        {
-                            var f = item.Split('\t').First();
-                            f = f.Substring(f.IndexOf('/') + 1);
-                            f = f.Substring(f.IndexOf('/') + 1);
-                            if (!(f.Contains("meta.lsx") || String.IsNullOrEmpty(f) ))
-                                fileList.Add(f);
-                        }
-
-                        mod.Files = fileList;
+                        mod.PakPath = modPath;
 
                         //add to modslist
                         ModsList.Add(mod);
@@ -304,7 +303,16 @@ namespace Dos2.ModManager.ViewModels
                         }
                     }
 
+                    //Logging Progress
+                    int prg = Convert.ToInt32(100 / (modFiles.Count - 1) * i);
+                    ParentViewModel.Logger.ProgressValue = prg;
                 }
+
+                //Logging End
+                ParentViewModel.Logger.IsIndeterminate = false;
+                ParentViewModel.Logger.NotifyStatusChanged();
+
+                GetModFilesAsync();
 
                 ApplyModSettings();
             }
@@ -314,6 +322,51 @@ namespace Dos2.ModManager.ViewModels
             }
         }
 
+        private async void GetModFilesAsync()
+        {
+            //Logging Start
+            ParentViewModel.Logger.ProgressValue = 0;
+            ParentViewModel.Logger.IsIndeterminate = false;
+
+            for (int i = 0; i < ModsList.Count; i++)
+            {
+                Dos2Mod mod = (Dos2Mod)ModsList[i];
+
+                if (mod.Files != null && mod.Files.Any())
+                    continue;
+
+                //get file list
+                var rawoutput = await Task.Run(() => GetFileListForPak(mod.PakPath));
+                var fileList = new List<string>();
+                foreach (var item in rawoutput)
+                {
+                    var f = item.Split('\t').First();
+                    f = f.Substring(f.IndexOf('/') + 1);
+                    f = f.Substring(f.IndexOf('/') + 1);
+
+                    string[] hidden = new string[] { "goals.raw", "story.div", "goals.div", "meta.lsx" };
+
+                    if (!(hidden.Any(f.Contains) || String.IsNullOrEmpty(f)))
+                        fileList.Add(f);
+                }
+
+                mod.Files = fileList;
+
+                //Logging Progress
+                int prg = Convert.ToInt32(100 / (ModsList.Count - 1 )* i);
+                ParentViewModel.Logger.ProgressValue = prg;
+            }
+
+            //Logging End
+            ParentViewModel.Logger.IsIndeterminate = false;
+            ParentViewModel.Logger.NotifyStatusChanged();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pak"></param>
+        /// <returns></returns>
         private async Task<List<string>> GetFileListForPak(string pak)
         {
 
@@ -379,7 +432,7 @@ namespace Dos2.ModManager.ViewModels
                 using (XmlReader xmlReader = XmlReader.Create(file))
                 {
                     XDocument xml = XDocument.Load(xmlReader);
-                    LsxTools lt = new LsxTools(xml);
+                    LsxTools lt = new LsxTools();
 
                     //Mod Info
                     XElement moduleInfo = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModuleInfo");
@@ -390,7 +443,7 @@ namespace Dos2.ModManager.ViewModels
                     modData.Author = lt.GetAttributeByName(els, "Author");
                     modData.Description = lt.GetAttributeByName(els, "Description");
                     modData.Folder = lt.GetAttributeByName(els, "Folder");
-                    //modData.Tags = lt.GetAttributeByName(els, "Tags");
+                    modData.MD5 = lt.GetAttributeByName(els, "MD5");
                     modData.Type = lt.GetAttributeByName(els, "Type");
                     modData.Version = lt.GetAttributeByName(els, "Version");
 

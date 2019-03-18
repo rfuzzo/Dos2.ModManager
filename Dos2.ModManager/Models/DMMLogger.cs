@@ -79,12 +79,7 @@ namespace Dos2.ModManager
                 else
                     return DMMLoggerSingleStatus.LSS_Finished;
 
-                /*if (true)
-                    return DMMLoggerSingleStatus.LSS_FinishedWithErrors;
-                else if (hasWarning)
-                    return DMMLoggerSingleStatus.LSS_FinishedWithWarnings;
-                else
-                    return DMMLoggerSingleStatus.LSS_Finished;*/
+               
             }
 
         }

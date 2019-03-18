@@ -263,7 +263,14 @@ namespace Dos2.ModManager.ViewModels
         public void Save()
         {
             Dos2.ModManager.Properties.Settings.Default.Save();
+
+            LsxTools ls = new LsxTools();
+            ls.SaveModSettings(ActiveProfile, ModsList.ToList());
+
         }
+
+        
+
         public bool CanRefresh()
         {
             return true;
@@ -478,7 +485,7 @@ namespace Dos2.ModManager.ViewModels
                     using (XmlReader xmlReader = XmlReader.Create(modsettings))
                     {
                         XDocument xml = XDocument.Load(xmlReader);
-                        LsxTools lt = new LsxTools(xml);
+                        LsxTools lt = new LsxTools();
 
                         //Mod Order
                         XElement modOrder = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModOrder");

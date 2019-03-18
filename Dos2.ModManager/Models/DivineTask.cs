@@ -43,8 +43,8 @@ namespace Dos2.ModManager.Models
             try
             {
                 //Logging Start
-                Logger.ProgressValue = 0;
-                Logger.IsIndeterminate = true;
+                //Logger.ProgressValue = 0;
+                //Logger.IsIndeterminate = true;
                 Logger.LogString("----------------------------------------------------------------");
                 Logger.LogString($"--- {args} ---");
                 Logger.LogString("----------------------------------------------------------------");
@@ -53,9 +53,9 @@ namespace Dos2.ModManager.Models
 
                 //Logging End
                 Logger.LogStrings(innerlog.RawLog);
-                Logger.IsIndeterminate = false;
-                Logger.ProgressValue = 100;
-                Logger.NotifyStatusChanged();
+                //Logger.IsIndeterminate = false;
+                //Logger.ProgressValue = 100;
+                //Logger.NotifyStatusChanged();
             }
             catch (Exception e) // Fixme: Catch specific exceptions
             {
@@ -99,7 +99,7 @@ namespace Dos2.ModManager.Models
                         {
                             string result = await reader.ReadLineAsync();
 
-                            inlogger.LogString(result);
+                            //inlogger.LogString(result);
                             Output += result + ";";
 
                             if (reader.EndOfStream)

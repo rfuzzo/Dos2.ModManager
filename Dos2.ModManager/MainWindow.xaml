@@ -226,8 +226,8 @@
                     Minimum="0" 
                     Maximum="100" 
                     Name="_progressBar" 
-                    Value="20" 
-                     />
+                    Value="{Binding Logger.ProgressValue}" 
+                    IsIndeterminate="{Binding Logger.IsIndeterminate}" />
             </StatusBarItem>
 
             <Separator Grid.Column="3" />

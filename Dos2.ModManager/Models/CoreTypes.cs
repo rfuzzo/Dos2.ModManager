@@ -8,6 +8,16 @@ using System.Threading.Tasks;
 
 namespace Dos2.ModManager.Models
 {
+    public struct ModuleShortDesc
+    {
+        public string Folder { get; set; }
+        public string MD5 { get; set; }
+        public string Name { get; set; }
+        public string UUID { get; set; }
+        public string Version { get; set; }
+    }
+
+
     public class Dos2ModsSettings
     {
         public Dos2ModsSettings()
@@ -66,11 +76,11 @@ namespace Dos2.ModManager.Models
         }
 
         //Meta Data
-        
-        [CategoryAttribute("Meta")]
-        //public bool IsEnabled { get; set; }
-        private bool _isEnabled;
 
+        [ReadOnlyAttribute(false)]
+        [CategoryAttribute("Meta")]
+        private bool _isEnabled;
+        [CategoryAttribute("Meta")]
         public bool IsEnabled
         {
             get { return _isEnabled; }
@@ -83,14 +93,14 @@ namespace Dos2.ModManager.Models
                 }
             }
         }
-
-
-
         [ReadOnlyAttribute(true)]
         [CategoryAttribute("Meta")]
         public int LoadOrder { get; set; }
+        [CategoryAttribute("Meta")]
+        public List<string> Files { get; set; }
 
 
+        //Hidden
         [CategoryAttribute("Meta")]
         [BrowsableAttribute(false)]
         public string Category { get; set; }
@@ -100,7 +110,9 @@ namespace Dos2.ModManager.Models
         [CategoryAttribute("Meta")]
         [BrowsableAttribute(false)]
         public bool HasUnsavedChanges { get; set; }
-        
+        [CategoryAttribute("Meta")]
+        [BrowsableAttribute(false)]
+        public string PakPath { get; set; }
 
 
         //Mod Data
@@ -128,7 +140,8 @@ namespace Dos2.ModManager.Models
         //public string StartupLevelName { get; set; }
         //public string PhotoBooth { get; set; }
         //public string NumPlayers { get; set; }
-        //public string MD5 { get; set; }
+        [CategoryAttribute("Mod")]
+        public string MD5 { get; set; }
         //public string GMTemplate { get; set; }
 
         [CategoryAttribute("Mod")]
@@ -138,8 +151,7 @@ namespace Dos2.ModManager.Models
         //[TypeConverter(typeof(ListConverter))]
         public List<string> Dependencies { get; set; }
 
-        [CategoryAttribute("Mod")]
-        public List<string> Files { get; set; }
+        
 
 
        
