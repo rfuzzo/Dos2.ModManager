@@ -11,10 +11,32 @@
         <!-- PropertyGrid Element -->
         <xctk:PropertyGrid Grid.Column="2" 
                             x:Name="PropertyGridMain" 
-                            SelectedObject="{Binding ParentViewModel.ActiveProperty, Mode=TwoWay}"
+                            SelectedObject="{Binding ParentViewModel.ActiveProperty, Mode=OneWay}"
                            
                             >
 
+            <!-- Custom Property Support -->
+            <xctk:PropertyGrid.EditorDefinitions>
+
+                <!-- Description -->
+                <xctk:EditorDefinition>
+                    <xctk:EditorDefinition.PropertiesDefinitions>
+                        <xctk:PropertyDefinition Name="Description" />
+                    </xctk:EditorDefinition.PropertiesDefinitions>
+                    <xctk:EditorDefinition.EditorTemplate>
+                        <DataTemplate>
+                            <TextBlock 
+                                Text="{Binding Value, Mode=OneWay}"
+                                TextWrapping="Wrap" 
+                                Background="LightYellow"
+                                />
+                        </DataTemplate>
+                    </xctk:EditorDefinition.EditorTemplate>
+                </xctk:EditorDefinition>
+
+            </xctk:PropertyGrid.EditorDefinitions>
+            
+            
         </xctk:PropertyGrid>
     </Grid>
 </UserControl>

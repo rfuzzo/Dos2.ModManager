@@ -4,6 +4,8 @@ using Ninject;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 
@@ -51,18 +53,18 @@ namespace Dos2.ModManager
                 }
             }
 
-            //QuickBMS Path
-            if (Dos2.ModManager.Properties.Settings.Default.QuickBMS == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.QuickBMS))
+            //Documents Path
+            if (Dos2.ModManager.Properties.Settings.Default.Mods == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Mods))
             {
                 var fd = new OpenFileDialog
                 {
-                    Title = "Select quickbms.exe.",
-                    FileName = Dos2.ModManager.Properties.Settings.Default.QuickBMS,
-                    Filter = "quickbms.exe|quickbms.exe"
+                    Title = "Select graphicSettings.lsx.",
+                    FileName = Dos2.ModManager.Properties.Settings.Default.Mods,
+                    Filter = "graphicSettings.lsx|graphicSettings.lsx"
                 };
                 if (fd.ShowDialog() == true && fd.CheckFileExists)
                 {
-                    Dos2.ModManager.Properties.Settings.Default.QuickBMS = fd.FileName;
+                    Dos2.ModManager.Properties.Settings.Default.Mods = fd.FileName;
                 }
             }
 
@@ -81,6 +83,26 @@ namespace Dos2.ModManager
                 }
             }
 
+            //Working Directory Path
+            if (!Directory.Exists(Dos2.ModManager.Properties.Settings.Default.WorkingDir))
+            {
+                string wd = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"wd");
+                try
+                {
+                    Directory.CreateDirectory(wd);
+                    Dos2.ModManager.Properties.Settings.Default.WorkingDir = wd;
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            
+            //Saved ModList
+            if (Dos2.ModManager.Properties.Settings.Default.ModList == null)
+            {
+                Dos2.ModManager.Properties.Settings.Default.ModList = new ObservableCollection<Models.Dos2Mod>();
+            }
            
 
             Dos2.ModManager.Properties.Settings.Default.Save();

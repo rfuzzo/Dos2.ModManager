@@ -9,9 +9,11 @@
              d:DesignHeight="450" d:DesignWidth="800">
 
     <Grid>
-        <TextBox Text="{Binding ParentViewModel.Log, Mode=OneWay }"
+        <TextBox Text="{Binding ParentViewModel.Logger.Log, Mode=OneWay }"
                  Background="LightYellow"
                  IsReadOnly="True"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                  >
         </TextBox>
     </Grid>

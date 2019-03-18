@@ -101,10 +101,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CustomSettings.cs" />
     <Compile Include="MainLayoutUpdateStrategy.cs" />
     <Compile Include="Models\CoreTypes.cs" />
+    <Compile Include="Models\CustomTypeConverters.cs" />
     <Compile Include="Models\DivineTask.cs" />
-    <Compile Include="Models\QBMSTask.cs" />
+    <Compile Include="Models\DMMLogger.cs" />
+    <Compile Include="Models\extensions.cs" />
+    <Compile Include="Models\lsxTools.cs" />
     <Compile Include="Templates\DataTemplates.xaml.cs">
       <DependentUpon>DataTemplates.xaml</DependentUpon>
     </Compile>

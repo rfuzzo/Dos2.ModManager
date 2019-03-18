@@ -38,24 +38,24 @@ namespace Dos2.ModManager.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string QuickBMS {
+        public string Mods {
             get {
-                return ((string)(this["QuickBMS"]));
+                return ((string)(this["Mods"]));
             }
             set {
-                this["QuickBMS"] = value;
+                this["Mods"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Dos2DE {
+        public string WorkingDir {
             get {
-                return ((string)(this["Dos2DE"]));
+                return ((string)(this["WorkingDir"]));
             }
             set {
-                this["Dos2DE"] = value;
+                this["WorkingDir"] = value;
             }
         }
         
@@ -82,5 +82,22 @@ namespace Dos2.ModManager.Properties {
                 this["Documents"] = value;
             }
         }
+
+        [global::System.Configuration.SettingsSerializeAs(System.Configuration.SettingsSerializeAs.Binary)]
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public System.Collections.ObjectModel.ObservableCollection<Models.Dos2Mod> ModList
+        {
+            get
+            {
+                return ((System.Collections.ObjectModel.ObservableCollection<Models.Dos2Mod>)(this["ModList"]));
+            }
+            set
+            {
+                this["ModList"] = value;
+            }
+        }
+
+       
     }
 }

@@ -19,8 +19,10 @@
     <UserControl.Resources>
         <CollectionViewSource  
             x:Key="cvs_ml" 
-            Source="{Binding ParentViewModel.ModsList, Mode=OneWay}"
+            Source="{Binding ModsList, Mode=TwoWay}"
             IsLiveGroupingRequested="True"
+            IsLiveSortingRequested="True"
+            
             >
 
         </CollectionViewSource>
@@ -31,17 +33,51 @@
     <Grid>
 
         <DataGrid x:Name="_workspaceDataGrid"
-            ItemsSource="{Binding Source={StaticResource cvs_ml}, UpdateSourceTrigger=PropertyChanged}"
-            SelectedItem="{Binding ParentViewModel.ActiveProperty}"
-            CanUserReorderColumns="True" CanUserResizeColumns="True" 
-            CanUserResizeRows="False" CanUserSortColumns="True"
+            ItemsSource="{Binding ModsCollectionView, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            SelectedItem="{Binding ParentViewModel.ActiveProperty, Mode=TwoWay}"
+            
+                  
+            CanUserReorderColumns="True" 
+            CanUserResizeColumns="True" 
+            CanUserResizeRows="False"
+            CanUserSortColumns="False"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            ScrollViewer.CanContentScroll="False"
+                  
             dd:DragDrop.IsDragSource="True"
             dd:DragDrop.IsDropTarget="True"
             dd:DragDrop.DropHandler="{Binding}" 
-            ScrollViewer.VerticalScrollBarVisibility="Auto"
-            ScrollViewer.CanContentScroll="False"
-                  />
+                  
+            AlternatingRowBackground="Gainsboro"  AlternationCount="2"
+            AutoGenerateColumns="False"
+            
+                  >
 
-       
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn  Header="Enabled" 
+                     Width="SizeToCells" 
+                     IsReadOnly="False"
+                     Binding="{Binding IsEnabled}"/>
+                <DataGridTextColumn  Header="Name" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding Name}"/>
+                <DataGridTextColumn  Header="Author" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding Author}"/>
+                
+                <DataGridTextColumn  Header="Version" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding Version}"/>
+
+                <DataGridTextColumn  Header="LoadOrder" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding LoadOrder}"/>
+
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

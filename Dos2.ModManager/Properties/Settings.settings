@@ -5,10 +5,10 @@
     <Setting Name="Divine" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="QuickBMS" Type="System.String" Scope="User">
+    <Setting Name="Mods" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="Dos2DE" Type="System.String" Scope="User">
+    <Setting Name="WorkingDir" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="Dos2" Type="System.String" Scope="User">

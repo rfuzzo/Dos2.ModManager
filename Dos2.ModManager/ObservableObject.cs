@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System;
 
 namespace Dos2.ModManager
 {
@@ -8,6 +9,7 @@ namespace Dos2.ModManager
     /// Represents an abstract object that provides notifications when properties are changed or are changing.
     /// Implements <see cref="INotifyPropertyChanged"/> and <see cref="INotifyPropertyChanging"/>
     /// </summary>
+    [Serializable]
     public abstract class ObservableObject : INotifyPropertyChanged, INotifyPropertyChanging
     {
         #region NotifyPropertyChanged

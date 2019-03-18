@@ -96,7 +96,6 @@ namespace Dos2.ModManager.ViewModels
 
         public DockableViewModel()
         {
-            
 
             SelectCommand = new RelayCommand(() => IsActive = true);
         }

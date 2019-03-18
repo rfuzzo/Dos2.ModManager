@@ -15,27 +15,33 @@
     <UserControl.Resources>
         <CollectionViewSource  
             x:Key="cvs_cmd" 
-            Source="{Binding ParentViewModel.ConflictsList, Mode=OneWay}"
+            Source="{Binding ConflictsList, Mode=OneWay}"
             >
             <!-- Sorting -->
             <CollectionViewSource.SortDescriptions>
-                <scm:SortDescription PropertyName="Category"/>
+                <scm:SortDescription PropertyName="Type"/>
                 <scm:SortDescription PropertyName="Name"/>
             </CollectionViewSource.SortDescriptions>
 
             <!-- Grouping-->
             <CollectionViewSource.GroupDescriptions>
-                <dat:PropertyGroupDescription PropertyName="Category" />
+                <dat:PropertyGroupDescription PropertyName="Type" />
             </CollectionViewSource.GroupDescriptions>
 
         </CollectionViewSource>
 
+        <!-- Expander -->
         <Style x:Key="ContainerStyle" TargetType="{x:Type GroupItem}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate>
-                        <Expander Header="{Binding Name}" IsExpanded="True" >
-                            <ItemsPresenter/>
+                        <Expander IsExpanded="True">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Bottom" />
+                                </StackPanel>
+                            </Expander.Header>
+                            <ItemsPresenter Margin="20,0,0,0"/>
                         </Expander>
                     </ControlTemplate>
                 </Setter.Value>
@@ -49,20 +55,25 @@
                   ItemsSource="{Binding Source={StaticResource cvs_cmd}}" 
                    >
 
-
-            
-
+            <!-- Columns -->
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Command"/>
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                    <GridViewColumn Header="Mod" DisplayMemberBinding="{Binding ModID}"/>
                 </GridView>
             </ListView.View>
-
+            
+            
+            
             <ListView.GroupStyle>
                 <GroupStyle ContainerStyle="{StaticResource ContainerStyle}">
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate>
-                            <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                            <TextBlock FontWeight="Light" 
+                                       FontSize="14" 
+                                       FontStyle="Italic"
+                                       Text="{Binding Name}"
+                                       Background="Yellow"/>
                         </DataTemplate>
                     </GroupStyle.HeaderTemplate>
                 </GroupStyle>

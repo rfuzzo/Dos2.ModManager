@@ -17,6 +17,8 @@ using Ninject;
 using Ninject.Infrastructure;
 using Dos2.ModManager.Commands;
 using Dos2.ModManager.Models;
+using System.Xml.Linq;
+using System.Xml;
 
 namespace Dos2.ModManager.ViewModels
 {
@@ -91,65 +93,6 @@ namespace Dos2.ModManager.ViewModels
         #endregion
 
         #region Properties
-        private object _activeProperty;
-        /// <summary>
-        /// Holds the currently active Wcc Lite Command in the window.
-        /// </summary>
-        public object ActiveProperty
-        {
-            get
-            {
-                return _activeProperty;
-            }
-            set
-            {
-                if (_activeProperty != value)
-                {
-                    _activeProperty = value;
-                    InvokePropertyChanged();
-                }
-            }
-        }
-
-        private string _log;
-        /// <summary>
-        /// Holds the Logger Class from the Wcc Task Handler.
-        /// </summary>
-        public string Log
-        {
-            get
-            {
-                return _log;
-            }
-            set
-            {
-                if (_log != value)
-                {
-                    _log = value;
-                    InvokePropertyChanged();
-                }
-            }
-        }
-
-        private ObservableCollection<Dos2Conflict> _conflictsList;
-        /// <summary>
-        /// Holds the global active Conflicts.
-        /// </summary>
-        public ObservableCollection<Dos2Conflict> ConflictsList
-        {
-            get
-            {
-                return _conflictsList;
-            }
-            set
-            {
-                if (_conflictsList != value)
-                {
-                    _conflictsList = value;
-                    InvokePropertyChanged();
-                }
-            }
-        }
 
         private ObservableCollection<Dos2Mod> _modsList;
         /// <summary>
@@ -166,11 +109,98 @@ namespace Dos2.ModManager.ViewModels
                 if (_modsList != value)
                 {
                     _modsList = value;
+                    InvokePropertyChanged("ModsList");
+                    InvokePropertyChanged("ModsCollectionView");
+
+                }
+            }
+        }
+
+        private Dos2Mod _activeProperty;
+        /// <summary>
+        /// Holds the currently active Wcc Lite Command in the window.
+        /// </summary>
+        public Dos2Mod ActiveProperty
+        {
+            get
+            {
+                return _activeProperty;
+            }
+            set
+            {
+                if (_activeProperty != value)
+                {
+                    _activeProperty = value;
+                    NotifyModChanged();
+                    InvokePropertyChanged("ActiveProperty");
+                }
+            }
+        }
+
+        private DMMLogger _logger;
+        /// <summary>
+        /// Holds the Logger Class from the Divine Task Handler.
+        /// </summary>
+        public DMMLogger Logger
+        {
+            get
+            {
+                return _logger;
+            }
+            set
+            {
+                if (_logger != value)
+                {
+                    _logger = value;
                     InvokePropertyChanged();
                 }
             }
         }
 
+        private ObservableCollection<Dos2ModsSettings> _profiles;
+        /// <summary>
+        /// Holds the ModList stored in the Settings.
+        /// </summary>
+        public ObservableCollection<Dos2ModsSettings> Profiles
+        {
+            get
+            {
+                return _profiles;
+            }
+            set
+            {
+                if (_profiles != value)
+                {
+                    _profiles = value;
+                    InvokePropertyChanged();
+                }
+            }
+        }
+        private Dos2ModsSettings _activeProfile;
+        /// <summary>
+        /// Holds the ModList stored in the Settings.
+        /// </summary>
+        public Dos2ModsSettings ActiveProfile
+        {
+            get
+            {
+                return Profiles.FirstOrDefault(x => x.IsActive);
+            }
+            set
+            {
+                if (_activeProfile != value)
+                {
+                    _activeProfile = value;
+                    InvokePropertyChanged();
+                    ChangeActiveProfile(value);
+                }
+               
+            }
+        }
+        public DivineTaskHandler DivineTaskHandler { get; set; }
+        #endregion
+
+        #region ViewModels
 
         private IViewModel _utilities;
         public IViewModel Utilities
@@ -189,17 +219,34 @@ namespace Dos2.ModManager.ViewModels
             }
         }
 
-        //public DivineTaskHandler DivineTaskHandler { get; set; }
-        //public QBMSTaskHandler QBMSTaskHandler { get; set; }
+        private IViewModel _workspace;
+        public IViewModel Workspace
+        {
+            get
+            {
+                return _workspace;
+            }
+            set
+            {
+                if (_workspace != value)
+                {
+                    _workspace = value;
+                    InvokePropertyChanged();
+                }
+            }
+        }
+
         #endregion
 
         #region Commands
         public ICommand ExitCommand { get; }
         public ICommand SaveCommand { get; }
+        public ICommand RefreshCommand { get; }
+        public ICommand RunGameCommand { get; }
 
 
         public ICommand LocateDivineCommand { get; }
-        public ICommand LocateQuickBMSCommand { get; }
+        public ICommand LocateDocumentsCommand { get; }
         public ICommand LocateGameCommand { get; }
 
 
@@ -217,6 +264,24 @@ namespace Dos2.ModManager.ViewModels
         {
             Dos2.ModManager.Properties.Settings.Default.Save();
         }
+        public bool CanRefresh()
+        {
+            return true;
+        }
+        public void Refresh()
+        {
+            throw new NotImplementedException();
+        }
+        public bool CanRunGame()
+        {
+            return true;
+        }
+        public void RunGame()
+        {
+            throw new NotImplementedException();
+        }
+        
+        
 
 
         public bool CanLocateDivine()
@@ -236,21 +301,21 @@ namespace Dos2.ModManager.ViewModels
                 Dos2.ModManager.Properties.Settings.Default.Divine = fd.FileName;
             }
         }
-        public bool CanLocateQuickBMS()
+        public bool CanLocateDocuments()
         {
             return true;
         }
-        public void LocateQuickBMS()
+        public void LocateDocuments()
         {
             var fd = new OpenFileDialog
             {
-                Title = "Select quickbms.exe.",
-                FileName = Dos2.ModManager.Properties.Settings.Default.QuickBMS,
-                Filter = "quickbms.exe|quickbms.exe"
+                Title = "Select graphicSettings.lsx.",
+                FileName = Dos2.ModManager.Properties.Settings.Default.Mods,
+                Filter = "graphicSettings.lsx|graphicSettings.lsx"
             };
             if (fd.ShowDialog() == true && fd.CheckFileExists)
             {
-                Dos2.ModManager.Properties.Settings.Default.QuickBMS = fd.FileName;
+                Dos2.ModManager.Properties.Settings.Default.Mods = fd.FileName;
             }
         }
         public bool CanLocateGame()
@@ -286,27 +351,45 @@ namespace Dos2.ModManager.ViewModels
 
             #region ViewModels
             Utilities = kernel.Get<UtilitiesViewModel>();
+            //Workspace = kernel.Get<WorkspaceViewModel>();
 
             #endregion
 
             #region Relay Commands
             ExitCommand = new RelayCommand(Exit);
             SaveCommand = new RelayCommand(Save, CanSave);
+            RefreshCommand = new RelayCommand(Refresh, CanRefresh);
+            RunGameCommand = new RelayCommand(RunGame, CanRunGame);
 
             LocateDivineCommand = new RelayCommand(LocateDivine, CanLocateDivine);
-            LocateQuickBMSCommand = new RelayCommand(LocateQuickBMS, CanLocateQuickBMS);
+            LocateDocumentsCommand = new RelayCommand(LocateDocuments, CanLocateDocuments);
             LocateGameCommand = new RelayCommand(LocateGame, CanLocateGame);
             #endregion
+
+            // core logic
+            ModsList = Properties.Settings.Default.ModList;
+            DivineTaskHandler = new DivineTaskHandler(Properties.Settings.Default.Divine);
+            Logger = DivineTaskHandler.Logger;
+            Profiles = new ObservableCollection<Dos2ModsSettings>();
+
+            //Get Profile Info
+            // FIXME check for changes
+            GetProfileInfo();
+
 
             // Layout
             AnchorablesSource = new ObservableCollection<DockableViewModel>()
             {
-               
-                new ConflictsViewModel()
+
+                new WorkspaceViewModel(this)
+                {
+                    Title = "Mods",
+                    ContentId = "mods",
+                },
+                new ConflictsViewModel(this)
                 {
                     Title = "Conflicts List",
-                    ContentId = "conflictsList",
-                    ParentViewModel = this,
+                    ContentId = "conflicts",
                 },
                 new LogViewModel()
                 {
@@ -320,12 +403,7 @@ namespace Dos2.ModManager.ViewModels
                     ContentId = "properties",
                     ParentViewModel = this,
                 },
-                 new WorkspaceViewModel()
-                {
-                    Title = "Mods",
-                    ContentId = "mods",
-                    ParentViewModel = this,
-                },
+               
 
             };
             DocumentsSource = new ObservableCollection<WorkspaceViewModel>
@@ -334,17 +412,159 @@ namespace Dos2.ModManager.ViewModels
                 
 
             };
+        }
 
+        private void ChangeActiveProfile(Dos2ModsSettings profile)
+        {
+            //get old profile
+            var id = profile.UUID;
+            Profiles.FirstOrDefault(x => x.IsActive).IsActive = false;
+            Profiles.FirstOrDefault(x => x.UUID == id).IsActive = true;
 
-            // core logic
-            //DivineTaskHandler = new DivineTaskHandler(Properties.Settings.Default.Divine);
-            //QBMSTaskHandler = new QBMSTaskHandler(Properties.Settings.Default.QuickBMS);
-            ModsList = new ObservableCollection<Dos2Mod>();
-            ConflictsList = new ObservableCollection<Dos2Conflict>();
-            Log = "test";
+            //write to the lsb
+            // FIXME
 
+            //go into workspace view model and apply view
+            if (AnchorablesSource != null)
+            {
+                WorkspaceViewModel wvm = (WorkspaceViewModel)AnchorablesSource.First(x => x.ContentId == "mods");
+                if (wvm != null)
+                {
+                    wvm.ApplyModSettings(); 
+                }
+            }
         }
 
 
+        /// <summary>
+        /// Gets Data from profile lsbs and lsx
+        /// </summary>
+        #region GetProfileData
+        /// <summary>
+        /// Gets Data from profile lsbs and lsx and returns the UUID of the active profile.
+        /// </summary>
+        /// <param name="activeProfileID"></param>
+        /// <returns></returns>
+        private void GetProfileInfo()
+        {
+           
+
+            Profiles.Clear(); //FIXME check for changes
+
+            //get active profile ID
+            string profileDir = Path.Combine(Path.GetDirectoryName(Dos2.ModManager.Properties.Settings.Default.Mods), @"PlayerProfiles");
+            string fileName = Path.Combine(profileDir, @"playerprofiles.lsb");
+            string activeProfileID = hack_ExtractSingleUUID(fileName);
+
+            //get data from profiles
+            var profileDirList = Directory.GetDirectories(profileDir).ToList();
+            foreach (var dir in profileDirList)
+            {
+                var profile = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("profile.lsb"));
+                string id = hack_ExtractSingleUUID(profile);
+
+                //Get profile Info for Mods
+                var settings = new Dos2ModsSettings()
+                {
+                    Name = Path.GetFileNameWithoutExtension(dir),
+                    UUID = id,
+                    IsActive = (id == activeProfileID)
+                };
+
+                //read modsettings file
+                var modsettings = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("modsettings.lsx"));
+                try
+                {
+                    using (XmlReader xmlReader = XmlReader.Create(modsettings))
+                    {
+                        XDocument xml = XDocument.Load(xmlReader);
+                        LsxTools lt = new LsxTools(xml);
+
+                        //Mod Order
+                        XElement modOrder = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModOrder");
+                        if (modOrder.HasElements)
+                        {
+                            var children = modOrder.Elements().First().Elements().ToList();
+                            foreach (var module in children)
+                            {
+                                var atts = module.Elements().ToList();
+                                string modID = lt.GetAttributeByName(atts, "UUID");
+                                settings.ModLoadOrder.Add(modID);
+                            }
+                        }
+
+                        //Active Mods
+                        var activeMods = xml.Descendants("node").Where(x => x.Attribute("id").Value == "ModuleShortDesc").ToList();
+                        if (activeMods.Any())
+                        {
+                            foreach (var item in activeMods)
+                            {
+                                var atts = item.Elements().ToList();
+                                string modID = lt.GetAttributeByName(atts, "UUID");
+                                settings.ActiveMods.Add(modID);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+
+                Profiles.Add(settings);
+            }
+        }
+        /// <summary>
+        /// a hack to quickly extract one UUID from an lsb without converting to lsx.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        private string hack_ExtractSingleUUID(string file)
+        {
+            string uuid = "";
+
+            if (File.Exists(file))
+            {
+                using (BinaryReader br = new BinaryReader(File.Open(file, FileMode.Open)))
+                {
+                    var bytes = br.ReadBytes((int)br.BaseStream.Length);
+
+                    string utf8 = System.Text.Encoding.UTF8.GetString(bytes);
+                    var dashes = utf8.Count(f => f == '-');
+                    if (dashes == 4)
+                    {
+                        uuid = utf8.Substring(utf8.IndexOf('-') - 8, 36);
+                    }
+                    else if (dashes < 4)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            return uuid;
+        }
+        #endregion
+
+
+        public void NotifyModChanged()
+        {
+            if (AnchorablesSource != null)
+            {
+                ConflictsViewModel cvm = (ConflictsViewModel)AnchorablesSource.First(x => x.ContentId == "conflicts");
+                if (cvm != null)
+                {
+                    cvm.RegenerateConflictsList();
+                }
+            }
+            
+            
+        }
     }
 }
+
+
+
