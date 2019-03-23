@@ -65,7 +65,7 @@
 
             <!-- Help -->
             <MenuItem Header="Help" DataContext="{Binding Utilities}">
-                <MenuItem Header="About Modkit UI" Command="{Binding OpenAboutCommand}">
+                <MenuItem Header="About" Command="{Binding OpenAboutCommand}">
                     <MenuItem.Icon>
                         <Image Source="Resources/Icons/StatusHelp_16x.png"/>
                     </MenuItem.Icon>
@@ -104,6 +104,8 @@
                 </Button>
 
                 <Separator/>
+
+                <TextBlock Text="Profile: " HorizontalAlignment="Center" VerticalAlignment="Center" />
 
                 <ComboBox x:Name="_cmbProfiles"
                           ItemsSource="{Binding Profiles}"

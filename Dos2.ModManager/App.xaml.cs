@@ -38,27 +38,16 @@ namespace Dos2.ModManager
         private void InitAppSetting()
         {
             //debug
+            /*
             Dos2.ModManager.Properties.Settings.Default.Divine = @"E:\moddingdir_dos2\TOOLS\divine\divine.exe";
             Dos2.ModManager.Properties.Settings.Default.Mods = @"E:\moddingdir_dos2\Larian Studios\Divinity Original Sin 2 Definitive Edition\graphicSettings.lsx";
             Dos2.ModManager.Properties.Settings.Default.Dos2 = @"C:\Steam\steamapps\common\Divinity Original Sin 2\DefEd\bin\EoCApp.exe";
-
+            */
             //debug
 
 
             //Divine Path
-            if (Dos2.ModManager.Properties.Settings.Default.Divine == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Divine))
-            {
-                var fd = new OpenFileDialog
-                {
-                    Title = "Select divine.exe.",
-                    FileName = Dos2.ModManager.Properties.Settings.Default.Divine,
-                    Filter = "divine.exe|divine.exe"
-                };
-                if (fd.ShowDialog() == true && fd.CheckFileExists)
-                {
-                    Dos2.ModManager.Properties.Settings.Default.Divine = fd.FileName;
-                }
-            }
+           
 
             //Documents Path
             if (Dos2.ModManager.Properties.Settings.Default.Mods == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Mods))
@@ -75,20 +64,6 @@ namespace Dos2.ModManager
                 }
             }
 
-            //Game Path
-            if (Dos2.ModManager.Properties.Settings.Default.Dos2 == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Dos2))
-            {
-                var fd = new OpenFileDialog
-                {
-                    Title = "Select EoCApp.exe.",
-                    FileName = Dos2.ModManager.Properties.Settings.Default.Dos2,
-                    Filter = "EoCApp.exe|EoCApp.exe"
-                };
-                if (fd.ShowDialog() == true && fd.CheckFileExists)
-                {
-                    Dos2.ModManager.Properties.Settings.Default.Dos2 = fd.FileName;
-                }
-            }
 
             //Working Directory Path
             if (!Directory.Exists(Dos2.ModManager.Properties.Settings.Default.WorkingDir))

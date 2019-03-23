@@ -178,8 +178,8 @@ namespace Dos2.ModManager.ViewModels
                
             }
         }
-        public DivineTaskHandler DivineTaskHandler { get; set; }
-        public LsxTools ls { get; set; }
+        public LsxTools lt { get; set; }
+        public PakTools pt { get; set; }
         public bool IsInitialized { get; set; }
         
         #endregion
@@ -246,6 +246,18 @@ namespace Dos2.ModManager.ViewModels
         }
         public void Save()
         {
+            WorkspaceViewModel wvm = (WorkspaceViewModel)AnchorablesSource.First(x => x.ContentId == "mods");
+
+            //var dbg = wvm.ModsCollectionView.CurrentItem;
+            //wvm.ModsCollectionView.CommitEdit();
+            //wvm.ModsCollectionView.Refresh();
+
+            
+            //Logging Start
+            Logger.ProgressValue = 0;
+            Logger.IsIndeterminate = true;
+            Logger.Status = "Saving...";
+
             Dos2.ModManager.Properties.Settings.Default.Save();
 
             MessageBoxResult result = MessageBox.Show(
@@ -253,13 +265,29 @@ namespace Dos2.ModManager.ViewModels
                     "Save Load Order?", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
             if (result == MessageBoxResult.OK)
             {
-                ls.SaveModSettings(ActiveProfile, ModsList.ToList());
+                lt.SaveModSettings(ActiveProfile, ModsList.ToList());
+
+                // refresh
+                //FIXME this should be redundant
+                bool initProfiles = GetProfileInfo();
+                if (initProfiles)
+                {
+                    
+                    //FIXME check for updates
+                    wvm.GetModDataAsync();
+                }
             }
             else
             {
                 MessageBoxResult viper = MessageBox.Show("You'll coward don't even smoke crack.");
                 // do noting
             }
+
+            //Logging End
+            Logger.ProgressValue = 100;
+            Logger.IsIndeterminate = false;
+            Logger.Status = "Finished.";
+            Logger.NotifyStatusChanged();
         }
 
         
@@ -270,8 +298,14 @@ namespace Dos2.ModManager.ViewModels
         }
         public void Refresh()
         {
+            //Logging Start
+            Logger.ProgressValue = 0;
+            Logger.IsIndeterminate = true;
+            Logger.Status = "Refreshing...";
+            Logger.Log = "";
 
             IsInitialized = false;
+            ModsList.Clear();
 
             bool initProfiles = GetProfileInfo();
             if (initProfiles)
@@ -280,39 +314,45 @@ namespace Dos2.ModManager.ViewModels
                 //FIXME check for updates
                 wvm.GetModDataAsync();
             }
-            
-            
+
+            //Logging End
+            Logger.ProgressValue = 100;
+            Logger.IsIndeterminate = false;
+            Logger.Status = "Finished.";
+            Logger.NotifyStatusChanged();
 
         }
+
+
         public bool CanRunGame()
         {
             return IsInitialized;
         }
         public void RunGame()
         {
+            if (Dos2.ModManager.Properties.Settings.Default.Dos2 == null || !File.Exists(Dos2.ModManager.Properties.Settings.Default.Dos2))
+            {
+                var fd = new OpenFileDialog
+                {
+                    Title = "Select EoCApp.exe.",
+                    FileName = Dos2.ModManager.Properties.Settings.Default.Dos2,
+                    Filter = "EoCApp.exe|EoCApp.exe"
+                };
+                if (fd.ShowDialog() == true && fd.CheckFileExists)
+                {
+                    Dos2.ModManager.Properties.Settings.Default.Dos2 = fd.FileName;
+                    Dos2.ModManager.Properties.Settings.Default.Save();
+                }
+            }
+            
+
             Process.Start(Dos2.ModManager.Properties.Settings.Default.Dos2);
         }
         
         
 
 
-        public bool CanLocateDivine()
-        {
-            return true;
-        }
-        public void LocateDivine()
-        {
-            var fd = new OpenFileDialog
-            {
-                Title = "Select divine.exe.",
-                FileName = Dos2.ModManager.Properties.Settings.Default.Divine,
-                Filter = "divine.exe|divine.exe"
-            };
-            if (fd.ShowDialog() == true && fd.CheckFileExists)
-            {
-                Dos2.ModManager.Properties.Settings.Default.Divine = fd.FileName;
-            }
-        }
+       
         public bool CanLocateDocuments()
         {
             return true;
@@ -363,7 +403,6 @@ namespace Dos2.ModManager.ViewModels
 
             #region ViewModels
             Utilities = kernel.Get<UtilitiesViewModel>();
-            //Workspace = kernel.Get<WorkspaceViewModel>();
 
             #endregion
 
@@ -373,16 +412,15 @@ namespace Dos2.ModManager.ViewModels
             RefreshCommand = new RelayCommand(Refresh, CanRefresh);
             RunGameCommand = new RelayCommand(RunGame, CanRunGame);
 
-            LocateDivineCommand = new RelayCommand(LocateDivine, CanLocateDivine);
             LocateDocumentsCommand = new RelayCommand(LocateDocuments, CanLocateDocuments);
             LocateGameCommand = new RelayCommand(LocateGame, CanLocateGame);
             #endregion
 
             ModsList = Properties.Settings.Default.ModList;
-            DivineTaskHandler = new DivineTaskHandler(Properties.Settings.Default.Divine);
-            Logger = DivineTaskHandler.Logger;
+            Logger = new DMMLogger();
             Profiles = new ObservableCollection<Dos2ModsSettings>();
-            ls = new LsxTools();
+            lt = new LsxTools();
+            pt = new PakTools(this);
 
             // Get Profile Info
             // FIXME check for changes
@@ -402,11 +440,6 @@ namespace Dos2.ModManager.ViewModels
                         Title = "Mods",
                         ContentId = "mods",
                     },
-                    new ConflictsViewModel(this)
-                    {
-                        Title = "Conflicts List",
-                        ContentId = "conflicts",
-                    },
                     new LogViewModel()
                     {
                         Title = "Log",
@@ -419,12 +452,23 @@ namespace Dos2.ModManager.ViewModels
                         ContentId = "properties",
                         ParentViewModel = this,
                     },
+                    new ConflictsViewModel(this)
+                    {
+                        Title = "Conflicts List",
+                        ContentId = "conflicts",
+                    },
                 };
             }
         }
 
         private void ChangeActiveProfile(Dos2ModsSettings profile)
         {
+            // FIXME bad check
+            if (profile == null)
+            {
+                return;
+            }
+            
             //get old profile
             var id = profile.UUID;
             Profiles.FirstOrDefault(x => x.IsActive).IsActive = false;
@@ -456,12 +500,14 @@ namespace Dos2.ModManager.ViewModels
         /// <returns></returns>
         private bool GetProfileInfo()
         {
+            Logger.Status = "Fetching Profile Data...";
+
             Profiles.Clear(); //FIXME check for changes
 
             //get active profile ID
             string profileDir = Path.Combine(Path.GetDirectoryName(Dos2.ModManager.Properties.Settings.Default.Mods), @"PlayerProfiles");
             string fileName = Path.Combine(profileDir, @"playerprofiles.lsb");
-            DOS2_UserProfiles playerProfile = ls.GetActiveProfile(fileName);
+            DOS2_UserProfiles playerProfile = lt.GetActiveProfile(fileName);
 
             //checks
             if (!File.Exists(fileName) || playerProfile == null || String.IsNullOrEmpty(playerProfile.ActiveProfile))
@@ -469,6 +515,7 @@ namespace Dos2.ModManager.ViewModels
                 MessageBoxResult result = MessageBox.Show(
                     "No active profile found. Please check your paths or start the game once.",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Logger.Status = "Finished With Errors.";
                 return false;
             }
             else if (!Directory.Exists(profileDir) || !Directory.GetDirectories(profileDir).ToList().Any())
@@ -476,6 +523,7 @@ namespace Dos2.ModManager.ViewModels
                 MessageBoxResult result = MessageBox.Show(
                    "No profile data found. Please check your paths or start the game once.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Logger.Status = "Finished With Errors.";
                 return false;
             }
             else
@@ -487,7 +535,7 @@ namespace Dos2.ModManager.ViewModels
                     foreach (var dir in profileDirList)
                     {
                         var profile = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("profile.lsb"));
-                        DOS2_PlayerProfile pp = ls.GetProfile(profile);
+                        DOS2_PlayerProfile pp = lt.GetProfile(profile);
                         if (pp == null || String.IsNullOrEmpty(pp.PlayerProfileID))
                             continue;
 
@@ -534,6 +582,11 @@ namespace Dos2.ModManager.ViewModels
                         }
                         Profiles.Add(settings);
                     }
+
+                    //FIXME should be redundant, but isn't in the case of refresh...
+                    ActiveProfile = Profiles.FirstOrDefault(x => x.IsActive);
+
+                    Logger.Status = "Finished.";
                     return true;
                 }
                 catch (Exception e)
@@ -541,6 +594,7 @@ namespace Dos2.ModManager.ViewModels
                     MessageBoxResult result = MessageBox.Show(
                    "Something went wrong when trying to load profile data. Please check your paths or start the game once.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Logger.Status = "Finished With Errors.";
                     return false;
                     //throw;
                 }

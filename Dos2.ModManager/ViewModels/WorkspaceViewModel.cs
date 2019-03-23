@@ -1,6 +1,7 @@
 ﻿using Dos2.ModManager.Commands;
 using Dos2.ModManager.Models;
 using GongSolutions.Wpf.DragDrop;
+using LSLib.LS;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -66,7 +67,8 @@ namespace Dos2.ModManager.ViewModels
                 if (_modsCollectionView != value)
                 {
                     _modsCollectionView = value;
-                    InvokePropertyChanged();
+                    InvokePropertyChanged("ModsList");
+                    InvokePropertyChanged("ModsCollectionView");
 
                     ModsCollectionView.CommitEdit();
                 }
@@ -192,6 +194,7 @@ namespace Dos2.ModManager.ViewModels
                 MessageBoxResult result = MessageBox.Show(
                 "No mod directory found. Please check your paths.",
                 "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ParentViewModel.Logger.Status = "Finished With Errors.";
                 return;
             }
             if (!Directory.GetFiles(modDir).ToList().Any())
@@ -205,6 +208,7 @@ namespace Dos2.ModManager.ViewModels
                 //Logging Start
                 ParentViewModel.Logger.ProgressValue = 0;
                 ParentViewModel.Logger.IsIndeterminate = false;
+                ParentViewModel.Logger.Status = "Fetching Mod Data...";
 
                 for (int i = 0; i < modFiles.Count; i++)
                 {
@@ -218,7 +222,7 @@ namespace Dos2.ModManager.ViewModels
                     // FIXME check for updates
                     if (!ModsList.Where(x => x.UUID.Equals(uuid)).Any())
                     {
-                        meta = await Task.Run(() => ExtractModMeta(modPath));
+                        meta = await Task.Run(() => ParentViewModel.pt.ExtractModMeta(modPath));
                         if (String.IsNullOrEmpty(meta))
                             continue;
 
@@ -253,13 +257,11 @@ namespace Dos2.ModManager.ViewModels
 
                 //Logging End
                 ParentViewModel.Logger.IsIndeterminate = false;
+                ParentViewModel.Logger.Status = "Finished.";
                 ParentViewModel.Logger.NotifyStatusChanged();
 
                 // populate files list for mods
-                // FIXME blocking?
                 GetModFilesAsync();
-
-
                 ApplyModSettings(ParentViewModel.ActiveProfile);
             }
             catch (Exception)
@@ -267,6 +269,7 @@ namespace Dos2.ModManager.ViewModels
                 MessageBoxResult result = MessageBox.Show(
                    "Something went wrong when trying to load mod data. Please check your paths.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ParentViewModel.Logger.Status = "Finished With Errors.";
                 return;
                 //throw;
             }
@@ -280,6 +283,7 @@ namespace Dos2.ModManager.ViewModels
             //Logging Start
             ParentViewModel.Logger.ProgressValue = 0;
             ParentViewModel.Logger.IsIndeterminate = false;
+            ParentViewModel.Logger.Status = "Fetching Mod File Data...";
 
             for (int i = 0; i < ModsList.Count; i++)
             {
@@ -289,7 +293,7 @@ namespace Dos2.ModManager.ViewModels
                     continue;
 
                 //get file list
-                var rawoutput = await Task.Run(() => GetFileListForPak(mod.PakPath));
+                var rawoutput = await Task.Run(() => ParentViewModel.pt.GetFileListForPak(mod.PakPath));
                 var fileList = new List<string>();
                 foreach (var item in rawoutput)
                 {
@@ -313,6 +317,7 @@ namespace Dos2.ModManager.ViewModels
             //Logging End
             ParentViewModel.Logger.ProgressValue = 100;
             ParentViewModel.Logger.IsIndeterminate = false;
+            ParentViewModel.Logger.Status = "Finished.";
             ParentViewModel.Logger.NotifyStatusChanged();
 
             // set ready and save data
@@ -320,61 +325,9 @@ namespace Dos2.ModManager.ViewModels
             Dos2.ModManager.Properties.Settings.Default.Save();
         }
 
-        /// <summary>
-        /// calls divine.exe TaskHandler to list files for a .pak
-        /// </summary>
-        /// <param name="pak"></param>
-        /// <returns></returns>
-        private async Task<List<string>> GetFileListForPak(string pak)
-        {
+        
 
-            List<string> files = new List<string>();
-
-            string argument = "list-package";
-            string source = pak;
-
-            string arg = $"-a {argument} -s \"{source}\"";
-            await ParentViewModel.DivineTaskHandler.RunArgs(arg);
-            files = ParentViewModel.DivineTaskHandler.Output.Split(';').ToList();
-
-            return files;
-        }
-
-        /// <summary>
-        /// calls divine.exe TaskHandler to extract meta.lsx
-        /// </summary>
-        /// <param name="mod"></param>
-        /// <returns></returns>
-        private async Task<string> ExtractModMeta(string mod)
-        {
-
-            string wd = Dos2.ModManager.Properties.Settings.Default.WorkingDir;
-            string modName = Path.GetFileNameWithoutExtension(mod);
-
-            string meta = Path.Combine(wd, $"{modName}.lsx");
-
-            //extract meta.lsx into a working dir location
-            //FIXME move into Divine-Command class
-            string argument = "extract-single-file";
-            string file = "meta.lsx";
-            string source = mod;
-            string destination = meta;
-
-
-            //check if paths exist
-
-            string arg = $"-a {argument} -s \"{source}\" -d \"{destination}\" -f {file}";
-            await ParentViewModel.DivineTaskHandler.RunArgs(arg);
-
-
-
-            //check if outputfile was created //this should never trigger
-            if (!File.Exists(meta))
-                return "";
-
-
-            return meta;
-        }
+        
 
         /// <summary>
         /// reads the lsx (xml)
@@ -390,7 +343,7 @@ namespace Dos2.ModManager.ViewModels
                 using (XmlReader xmlReader = XmlReader.Create(file))
                 {
                     XDocument xml = XDocument.Load(xmlReader);
-                    LsxTools ls = ParentViewModel.ls;
+                    LsxTools ls = ParentViewModel.lt;
 
                     //Mod Info
                     XElement moduleInfo = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModuleInfo");
@@ -472,6 +425,7 @@ namespace Dos2.ModManager.ViewModels
 
         private void SortCollectionByProperty(string prop)
         {
+            //FIXME 
             ModsCollectionView.CommitEdit();
 
             ModsCollectionView.SortDescriptions.Clear();

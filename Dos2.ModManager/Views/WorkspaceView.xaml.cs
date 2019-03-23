@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dos2.ModManager.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,12 +21,20 @@ namespace Dos2.ModManager.Views
     /// </summary>
     public partial class WorkspaceView : UserControl
     {
+        public WorkspaceViewModel vm { get; set; }
+
+
         public WorkspaceView()
         {
             InitializeComponent();
         }
 
         private void _workspaceDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            
+        }
+
+        private void _workspaceDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
 
         }

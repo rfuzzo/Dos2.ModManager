@@ -5,6 +5,9 @@ using System.Windows;
 using System.Xml;
 using Dos2.ModManager.ViewModels;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using System.Reflection;
+using System;
+using System.Deployment.Application;
 
 namespace Dos2.ModManager
 {
@@ -20,7 +23,7 @@ namespace Dos2.ModManager
 
             this.Loaded += new RoutedEventHandler(OnWindowLoaded);
 
-
+            this.Title = Title + " - " + getRunningVersion();
         }
 
         public MainWindow(){  }
@@ -69,6 +72,20 @@ namespace Dos2.ModManager
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+
+
+        private Version getRunningVersion()
+        {
+            try
+            {
+                return ApplicationDeployment.CurrentDeployment.CurrentVersion;
+            }
+            catch (Exception)
+            {
+                return Assembly.GetExecutingAssembly().GetName().Version;
+            }
         }
     }
 }

@@ -65,23 +65,24 @@ namespace Dos2.ModManager
                 }
             }
         }
-        private DMMLoggerSingleStatus _status;
+        private string _status;
         /// <summary>
         /// Overall Status of the Logger.
         /// </summary>
-        public DMMLoggerSingleStatus Status
+        public string Status
         {
             get
             {
-
-                if (!RawLog.Any())
-                    return DMMLoggerSingleStatus.LSS_Idle;
-                else
-                    return DMMLoggerSingleStatus.LSS_Finished;
-
-               
+                return _status;
             }
-
+            set
+            {
+                if (_status != value)
+                {
+                    _status = value;
+                    InvokePropertyChanged();
+                }
+            }
         }
 
         private string _log;

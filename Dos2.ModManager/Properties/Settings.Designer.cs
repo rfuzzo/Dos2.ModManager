@@ -26,18 +26,6 @@ namespace Dos2.ModManager.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Divine {
-            get {
-                return ((string)(this["Divine"]));
-            }
-            set {
-                this["Divine"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Mods {
             get {
                 return ((string)(this["Mods"]));
@@ -62,24 +50,24 @@ namespace Dos2.ModManager.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Dos2 {
-            get {
-                return ((string)(this["Dos2"]));
-            }
-            set {
-                this["Dos2"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Documents {
             get {
                 return ((string)(this["Documents"]));
             }
             set {
                 this["Documents"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Dos2 {
+            get {
+                return ((string)(this["Dos2"]));
+            }
+            set {
+                this["Dos2"] = value;
             }
         }
 
@@ -97,7 +85,5 @@ namespace Dos2.ModManager.Properties {
                 this["ModList"] = value;
             }
         }
-
-       
     }
 }

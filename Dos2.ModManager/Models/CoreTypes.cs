@@ -90,8 +90,9 @@ namespace Dos2.ModManager.Models
         [ReadOnlyAttribute(true)]
         [CategoryAttribute("Meta")]
         public int LoadOrder { get; set; }
-        [ReadOnlyAttribute(true)]
+        [ReadOnlyAttribute(false)]
         [CategoryAttribute("Meta")]
+        [TypeConverter(typeof(ListConverter))]
         public List<string> Files { get; set; }
 
 
@@ -153,12 +154,12 @@ namespace Dos2.ModManager.Models
         //public string GMTemplate { get; set; }
 
         [CategoryAttribute("Mod")]
-        [ReadOnlyAttribute(true)]
-        //[TypeConverter(typeof(ListConverter))]
+        [ReadOnlyAttribute(false)]
+        [TypeConverter(typeof(ListConverter))]
         public List<string> TargetModes { get; set; }
         [CategoryAttribute("Mod")]
-        [ReadOnlyAttribute(true)]
-        //[TypeConverter(typeof(ListConverter))]
+        [ReadOnlyAttribute(false)]
+        [TypeConverter(typeof(ListConverter))]
         public List<string> Dependencies { get; set; }
 
         
