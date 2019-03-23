@@ -27,7 +27,12 @@ namespace Dos2.ModManager
         protected override void OnStartup(StartupEventArgs e)
         {
 
-            InitAppSetting();
+            if (!InitAppSetting())
+            {
+                Shutdown(1);
+                return;
+            }
+                
 
             base.OnStartup(e);
             MainWindow = Kernel.Get<MainWindow>();
@@ -35,7 +40,7 @@ namespace Dos2.ModManager
 
         }
 
-        private void InitAppSetting()
+        private bool InitAppSetting()
         {
             //debug
             /*
@@ -61,6 +66,11 @@ namespace Dos2.ModManager
                 if (fd.ShowDialog() == true && fd.CheckFileExists)
                 {
                     Dos2.ModManager.Properties.Settings.Default.Mods = fd.FileName;
+                }
+                else
+                {
+                    //System.Windows.Application.Current.Shutdown();
+                    return false;
                 }
             }
 
@@ -88,6 +98,8 @@ namespace Dos2.ModManager
            
 
             Dos2.ModManager.Properties.Settings.Default.Save();
+
+            return true;
         }
 
         protected override void OnExit(ExitEventArgs e)

@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 namespace Dos2.ModManager.Models
 {
    
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class Dos2ModsSettings
     {
         public Dos2ModsSettings()
@@ -38,6 +40,9 @@ namespace Dos2.ModManager.Models
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class Dos2Conflict
     {
         public Dos2Conflict()
@@ -57,6 +62,9 @@ namespace Dos2.ModManager.Models
 
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Serializable]
     public class Dos2Mod : ObservableObject
     {

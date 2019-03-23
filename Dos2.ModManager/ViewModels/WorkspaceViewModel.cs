@@ -208,7 +208,8 @@ namespace Dos2.ModManager.ViewModels
                 //Logging Start
                 ParentViewModel.Logger.ProgressValue = 0;
                 ParentViewModel.Logger.IsIndeterminate = false;
-                ParentViewModel.Logger.Status = "Fetching Mod Data...";
+                ParentViewModel.Logger.LogString("Fetching Mod Data...");
+                ParentViewModel.Logger.Status = "Fetching mod data...";
 
                 for (int i = 0; i < modFiles.Count; i++)
                 {
@@ -258,20 +259,22 @@ namespace Dos2.ModManager.ViewModels
                 //Logging End
                 ParentViewModel.Logger.IsIndeterminate = false;
                 ParentViewModel.Logger.Status = "Finished.";
+                ParentViewModel.Logger.LogString("Finished fetching mod data...");
                 ParentViewModel.Logger.NotifyStatusChanged();
 
                 // populate files list for mods
                 GetModFilesAsync();
                 ApplyModSettings(ParentViewModel.ActiveProfile);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 MessageBoxResult result = MessageBox.Show(
                    "Something went wrong when trying to load mod data. Please check your paths.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 ParentViewModel.Logger.Status = "Finished With Errors.";
+                ParentViewModel.Logger.LogString("Something went wrong when trying to load mod data. Please check your paths.");
+                ParentViewModel.Logger.LogString(e.ToString());
                 return;
-                //throw;
             }
         }
 
@@ -284,45 +287,59 @@ namespace Dos2.ModManager.ViewModels
             ParentViewModel.Logger.ProgressValue = 0;
             ParentViewModel.Logger.IsIndeterminate = false;
             ParentViewModel.Logger.Status = "Fetching Mod File Data...";
+            ParentViewModel.Logger.LogString("Fetching mod file data...");
 
-            for (int i = 0; i < ModsList.Count; i++)
+            try
             {
-                Dos2Mod mod = (Dos2Mod)ModsList[i];
-
-                if (mod.Files != null && mod.Files.Any())
-                    continue;
-
-                //get file list
-                var rawoutput = await Task.Run(() => ParentViewModel.pt.GetFileListForPak(mod.PakPath));
-                var fileList = new List<string>();
-                foreach (var item in rawoutput)
+                for (int i = 0; i < ModsList.Count; i++)
                 {
-                    var f = item.Split('\t').First();
-                    f = f.Substring(f.IndexOf('/') + 1);
-                    f = f.Substring(f.IndexOf('/') + 1);
+                    Dos2Mod mod = (Dos2Mod)ModsList[i];
 
-                    string[] hidden = new string[] { "goals.raw", "story.div", "goals.div", "meta.lsx" };
+                    if (mod.Files != null && mod.Files.Any())
+                        continue;
 
-                    if (!(hidden.Any(f.Contains) || String.IsNullOrEmpty(f)))
-                        fileList.Add(f);
+                    //get file list
+                    var rawoutput = await Task.Run(() => ParentViewModel.pt.GetFileListForPak(mod.PakPath));
+                    var fileList = new List<string>();
+                    foreach (var item in rawoutput)
+                    {
+                        var f = item.Split('\t').First();
+                        f = f.Substring(f.IndexOf('/') + 1);
+                        f = f.Substring(f.IndexOf('/') + 1);
+
+                        string[] hidden = new string[] { "goals.raw", "story.div", "goals.div", "meta.lsx" };
+
+                        if (!(hidden.Any(f.Contains) || String.IsNullOrEmpty(f)))
+                            fileList.Add(f);
+                    }
+
+                    mod.Files = fileList;
+
+                    //Logging Progress
+                    int prg = Convert.ToInt32(100 / (ModsList.Count - 1) * i);
+                    ParentViewModel.Logger.ProgressValue = prg;
+
                 }
 
-                mod.Files = fileList;
+                ParentViewModel.Logger.LogString("Finished fetching mod file data...");
 
-                //Logging Progress
-                int prg = Convert.ToInt32(100 / (ModsList.Count - 1 )* i);
-                ParentViewModel.Logger.ProgressValue = prg;
+                // set ready and save data
+                ParentViewModel.IsInitialized = true;
+                Dos2.ModManager.Properties.Settings.Default.Save();
+            }
+            catch (Exception e)
+            {
+
+                ParentViewModel.Logger.LogString("Something wrent wrong when trying to get mod files lists.");
+                ParentViewModel.Logger.LogString(e.ToString());
             }
 
             //Logging End
             ParentViewModel.Logger.ProgressValue = 100;
             ParentViewModel.Logger.IsIndeterminate = false;
             ParentViewModel.Logger.Status = "Finished.";
+            
             ParentViewModel.Logger.NotifyStatusChanged();
-
-            // set ready and save data
-            ParentViewModel.IsInitialized = true;
-            Dos2.ModManager.Properties.Settings.Default.Save();
         }
 
         

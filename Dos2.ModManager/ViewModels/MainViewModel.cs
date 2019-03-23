@@ -276,6 +276,8 @@ namespace Dos2.ModManager.ViewModels
                     //FIXME check for updates
                     wvm.GetModDataAsync();
                 }
+                Logger.LogString($"Saved Modlist for profile {ActiveProfile.Name}.");
+
             }
             else
             {
@@ -286,7 +288,7 @@ namespace Dos2.ModManager.ViewModels
             //Logging End
             Logger.ProgressValue = 100;
             Logger.IsIndeterminate = false;
-            Logger.Status = "Finished.";
+            Logger.LogString("Finished Saving.");
             Logger.NotifyStatusChanged();
         }
 
@@ -313,6 +315,8 @@ namespace Dos2.ModManager.ViewModels
                 WorkspaceViewModel wvm = (WorkspaceViewModel)AnchorablesSource.First(x => x.ContentId == "mods");
                 //FIXME check for updates
                 wvm.GetModDataAsync();
+
+                Logger.LogString($"Refreshed Modlist.");
             }
 
             //Logging End
@@ -342,11 +346,13 @@ namespace Dos2.ModManager.ViewModels
                 {
                     Dos2.ModManager.Properties.Settings.Default.Dos2 = fd.FileName;
                     Dos2.ModManager.Properties.Settings.Default.Save();
+                    Process.Start(Dos2.ModManager.Properties.Settings.Default.Dos2);
                 }
             }
-            
-
-            Process.Start(Dos2.ModManager.Properties.Settings.Default.Dos2);
+            else
+            {
+                Process.Start(Dos2.ModManager.Properties.Settings.Default.Dos2);
+            }
         }
         
         
@@ -423,6 +429,8 @@ namespace Dos2.ModManager.ViewModels
             pt = new PakTools(this);
 
             // Get Profile Info
+           
+
             // FIXME check for changes
             bool initProfiles =  GetProfileInfo();
             //check if any profiles were loaded 
@@ -458,6 +466,8 @@ namespace Dos2.ModManager.ViewModels
                         ContentId = "conflicts",
                     },
                 };
+
+                
             }
         }
 
@@ -501,6 +511,7 @@ namespace Dos2.ModManager.ViewModels
         private bool GetProfileInfo()
         {
             Logger.Status = "Fetching Profile Data...";
+            Logger.LogString("Fetching Profile Data...");
 
             Profiles.Clear(); //FIXME check for changes
 
@@ -516,6 +527,7 @@ namespace Dos2.ModManager.ViewModels
                     "No active profile found. Please check your paths or start the game once.",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Logger.Status = "Finished With Errors.";
+                Logger.LogString("No active profile found. Please check your paths or start the game once.");
                 return false;
             }
             else if (!Directory.Exists(profileDir) || !Directory.GetDirectories(profileDir).ToList().Any())
@@ -524,6 +536,7 @@ namespace Dos2.ModManager.ViewModels
                    "No profile data found. Please check your paths or start the game once.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Logger.Status = "Finished With Errors.";
+                Logger.LogString("No profile data found. Please check your paths or start the game once.");
                 return false;
             }
             else
@@ -587,6 +600,7 @@ namespace Dos2.ModManager.ViewModels
                     ActiveProfile = Profiles.FirstOrDefault(x => x.IsActive);
 
                     Logger.Status = "Finished.";
+                    Logger.LogString("Finished loading profile data.");
                     return true;
                 }
                 catch (Exception e)
@@ -595,8 +609,9 @@ namespace Dos2.ModManager.ViewModels
                    "Something went wrong when trying to load profile data. Please check your paths or start the game once.",
                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     Logger.Status = "Finished With Errors.";
+                    Logger.LogString("Something went wrong when trying to load profile data. Please check your paths or start the game once.");
+                    Logger.LogString(e.ToString());
                     return false;
-                    //throw;
                 }
             }
         }

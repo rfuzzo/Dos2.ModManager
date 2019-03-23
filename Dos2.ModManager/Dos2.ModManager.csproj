@@ -25,7 +25,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>5</ApplicationRevision>
     <ApplicationVersion>0.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -126,11 +126,10 @@
     </ApplicationDefinition>
     <Compile Include="CustomSettings.cs" />
     <Compile Include="MainLayoutUpdateStrategy.cs" />
-    <Compile Include="Models\CoreTypes.cs" />
+    <Compile Include="Models\CustomTypes.cs" />
     <Compile Include="Models\CustomTypeConverters.cs" />
     <Compile Include="Models\pakTools.cs" />
     <Compile Include="Models\DMMLogger.cs" />
-    <Compile Include="Models\extensions.cs" />
     <Compile Include="Models\lsxTools.cs" />
     <Compile Include="Models\NativeTypes.cs" />
     <Compile Include="Templates\DataTemplates.xaml.cs">
