@@ -11,15 +11,69 @@ using LSLib.LS.Enums;
 
 namespace Dos2.ModManager.Models
 {
-    class LsxTools
+    public class LsxTools
     {
-        private XDocument doc;
-
 
         public LsxTools()
         {
            
         }
+
+        /// <summary>
+        /// Reads playerprofiles.lsb
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public DOS2_UserProfiles GetActiveProfile(string file)
+        {
+            DOS2_UserProfiles up = new DOS2_UserProfiles();
+
+            if (File.Exists(file))
+            {
+                try
+                {
+                    Resource res = ResourceUtils.LoadResource(file);
+                    Node root = res.Regions.First().Value;
+                    up.ActiveProfile = root.Attributes["ActiveProfile"].Value.ToString();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return up;
+        }
+
+        /// <summary>
+        /// Reads profile.lsb
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public DOS2_PlayerProfile GetProfile(string file)
+        {
+            DOS2_PlayerProfile up = new DOS2_PlayerProfile();
+
+            if (File.Exists(file))
+            {
+                try
+                {
+                    Resource res = ResourceUtils.LoadResource(file);
+                    Node root = res.Regions.First().Value;
+
+                    up.PlayerProfileDisplayName = root.Attributes["PlayerProfileDisplayName"].Value.ToString();
+                    up.PlayerProfileID = root.Attributes["PlayerProfileID"].Value.ToString();
+                    up.PlayerProfileName = root.Attributes["PlayerProfileName"].Value.ToString();
+                    up.Version = root.Attributes["Version"].Value.ToString();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return up;
+        }
+
+
 
         /// <summary>
         /// Update Modsettings file.
@@ -37,9 +91,11 @@ namespace Dos2.ModManager.Models
 
             resource = ApplyChangesForProfile(resource, ModsList);
 
+            //dbg
+            //string destinationPath = @"E:\out.lsx";
+            //dbg
 
-            string destinationPath = @"E:\out.lsx";
-            //string destinationPath = file;
+            string destinationPath = file;
             ResourceFormat resourceFormat = ResourceFormat.LSX;
             ResourceUtils.SaveResource(resource, destinationPath, resourceFormat);
 
@@ -205,55 +261,7 @@ namespace Dos2.ModManager.Models
         }
 
 
-        /*
-        public void SaveModSettings_old(Dos2ModsSettings activeProfile, List<Dos2Mod> ModsList)
-        {
-
-            //write mod settings to lsx
-
-            // Change active profile (playerprofile.lsb)
-            // FIXME
-
-            // change profile settings (.../profile.lsx)
-            // FIXME
-
-           
-            
-
-
-
-            //build new xml
-            try
-            {
-                //StringBuilder sb = new StringBuilder();
-                XmlWriterSettings xws = new XmlWriterSettings();
-                xws.OmitXmlDeclaration = false;
-                xws.Indent = true;
-
-
-                XDocument doc = XDocument.Load(file);
-
-                using (XmlWriter xmlWriter = XmlWriter.Create(file, xws))
-                {
-                    //change nodes
-                    XElement ModOrderEl = doc.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModOrder");
-                    ModOrderEl.ReplaceWith(a1);
-
-
-                    XElement ModsEl = doc.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "Mods");
-                    b1.Elements().First().AddFirst(ModsEl.Elements().First().Elements().First());
-                    ModsEl.ReplaceWith(b1);
-
-                    // save as file
-                    doc.Save(xmlWriter);
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-        */
+        
 
     }
 }

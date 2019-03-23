@@ -16,18 +16,13 @@ using System.Windows.Shapes;
 namespace Dos2.ModManager.Views
 {
     /// <summary>
-    /// Interaction logic for WorkspaceView.xaml
+    /// Interaction logic for Settings.xaml
     /// </summary>
-    public partial class WorkspaceView : UserControl
+    public partial class Settings : Page
     {
-        public WorkspaceView()
+        public Settings()
         {
             InitializeComponent();
-        }
-
-        private void _workspaceDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-
         }
     }
 }

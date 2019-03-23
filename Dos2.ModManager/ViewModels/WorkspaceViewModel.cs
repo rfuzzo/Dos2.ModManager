@@ -50,17 +50,15 @@ namespace Dos2.ModManager.ViewModels
 
       
 
-        private ICollectionView _modsCollectionView;
+        private ListCollectionView _modsCollectionView;
         /// <summary>
         /// Holds the ModList stored in the Settings.
         /// </summary>
-        public ICollectionView ModsCollectionView
+        public ListCollectionView ModsCollectionView
         {
             get
             {
-                _modsCollectionView = (CollectionView)CollectionViewSource.GetDefaultView(ModsList);
-                if (_modsCollectionView != null)
-                    _modsCollectionView.SortDescriptions.Add(new SortDescription("LoadOrder", ListSortDirection.Ascending));
+                _modsCollectionView = (ListCollectionView)CollectionViewSource.GetDefaultView(ModsList);
                 return _modsCollectionView;
             }
             set
@@ -69,6 +67,8 @@ namespace Dos2.ModManager.ViewModels
                 {
                     _modsCollectionView = value;
                     InvokePropertyChanged();
+
+                    ModsCollectionView.CommitEdit();
                 }
             }
         }
@@ -166,70 +166,12 @@ namespace Dos2.ModManager.ViewModels
             ParentViewModel = vm;
 
             ModsList = vm.ModsList;
-            //_modsList.CollectionChanged += mods_CollectionChanged;
 
             //MOD DATA
             //Get Mod Info
             GetModDataAsync();
-            
-
-            //apply profile info to list (enable/disable mod and change load order)
-            //ApplyModSettings();
-
-            
-
-
 
         }
-
-        
-
-        /*private void mods_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.OldItems != null)
-            {
-                foreach (INotifyPropertyChanged item in e.OldItems)
-                    item.PropertyChanged -= item_PropertyChanged;
-            }
-            if (e.NewItems != null)
-            {
-                foreach (INotifyPropertyChanged item in e.NewItems)
-                    item.PropertyChanged += item_PropertyChanged;
-            }
-        }
-
-        private void item_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            ParentViewModel.NotifyModChanged();
-        }*/
-
-        /// <summary>
-        /// Applies Profile Settings to ModList
-        /// </summary>
-        #region Appply Mod Settings
-        /// <summary>
-        /// Change Load Order and enables mods depending on active profile
-        /// </summary>
-        public void ApplyModSettings()
-        {
-            Dos2ModsSettings activeSettings = ParentViewModel.Profiles.FirstOrDefault(x => x.IsActive);
-            foreach (var mod in ModsList)
-            {
-                mod.LoadOrder = activeSettings.ModLoadOrder.FindIndex(x => x == mod.UUID);
-                mod.IsEnabled = activeSettings.ActiveMods.Contains(mod.UUID);
-            }
-
-            SortCollectionByProperty("LoadOrder");
-        }
-
-        private void SortCollectionByProperty(string prop)
-        {
-            ModsCollectionView.SortDescriptions.Clear();
-            ModsCollectionView.SortDescriptions.Add(new SortDescription(prop, ListSortDirection.Ascending));
-        }
-
-        #endregion
-
 
 
         /// <summary>
@@ -239,21 +181,25 @@ namespace Dos2.ModManager.ViewModels
         /// <summary>
         /// Gets Moddata from paks if not already in ModList
         /// </summary>
-        private async void GetModDataAsync()
+        public async void GetModDataAsync()
         {
             string modDir = Path.Combine(Path.GetDirectoryName(Dos2.ModManager.Properties.Settings.Default.Mods), @"Mods");
+            // checks
+            #region checks
+            if (!Directory.Exists(Dos2.ModManager.Properties.Settings.Default.WorkingDir) ||
+                !Directory.Exists(modDir))
+            {
+                MessageBoxResult result = MessageBox.Show(
+                "No mod directory found. Please check your paths.",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!Directory.GetFiles(modDir).ToList().Any())
+                return;
+            #endregion
+
             try
             {
-                //reduntant checks FIXME
-                #region checks
-                if (!Directory.Exists(Dos2.ModManager.Properties.Settings.Default.WorkingDir))
-                    return;
-                if (!Directory.Exists(modDir))
-                    return;
-                if (!Directory.GetFiles(modDir).ToList().Any())
-                    return;
-                #endregion  
-
                 List<string> modFiles = Directory.GetFiles(modDir).ToList();
 
                 //Logging Start
@@ -264,13 +210,12 @@ namespace Dos2.ModManager.ViewModels
                 {
                     string modPath = modFiles[i];
 
-                    
-
                     //get UUID
                     string uuid = Path.GetFileNameWithoutExtension(modPath).Split('_').Last();
                     string meta = "";
 
                     //check if mod is already in ModList
+                    // FIXME check for updates
                     if (!ModsList.Where(x => x.UUID.Equals(uuid)).Any())
                     {
                         meta = await Task.Run(() => ExtractModMeta(modPath));
@@ -279,8 +224,6 @@ namespace Dos2.ModManager.ViewModels
 
                         //interpret meta.lsx
                         Dos2Mod mod = InterpretModMeta(meta);
-                        //Dos2Mod mod = await Task.Run(() => InterpretModMeta(meta));
-
                         mod.PakPath = modPath;
 
                         //add to modslist
@@ -312,16 +255,26 @@ namespace Dos2.ModManager.ViewModels
                 ParentViewModel.Logger.IsIndeterminate = false;
                 ParentViewModel.Logger.NotifyStatusChanged();
 
+                // populate files list for mods
+                // FIXME blocking?
                 GetModFilesAsync();
 
-                ApplyModSettings();
+
+                ApplyModSettings(ParentViewModel.ActiveProfile);
             }
             catch (Exception)
             {
-                throw;
+                MessageBoxResult result = MessageBox.Show(
+                   "Something went wrong when trying to load mod data. Please check your paths.",
+                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+                //throw;
             }
         }
 
+        /// <summary>
+        /// populate mod files list
+        /// </summary>
         private async void GetModFilesAsync()
         {
             //Logging Start
@@ -358,12 +311,17 @@ namespace Dos2.ModManager.ViewModels
             }
 
             //Logging End
+            ParentViewModel.Logger.ProgressValue = 100;
             ParentViewModel.Logger.IsIndeterminate = false;
             ParentViewModel.Logger.NotifyStatusChanged();
+
+            // set ready and save data
+            ParentViewModel.IsInitialized = true;
+            Dos2.ModManager.Properties.Settings.Default.Save();
         }
 
         /// <summary>
-        /// 
+        /// calls divine.exe TaskHandler to list files for a .pak
         /// </summary>
         /// <param name="pak"></param>
         /// <returns></returns>
@@ -419,7 +377,7 @@ namespace Dos2.ModManager.ViewModels
         }
 
         /// <summary>
-        /// waits for file to be readable and reads the lsx (xml)
+        /// reads the lsx (xml)
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
@@ -432,20 +390,21 @@ namespace Dos2.ModManager.ViewModels
                 using (XmlReader xmlReader = XmlReader.Create(file))
                 {
                     XDocument xml = XDocument.Load(xmlReader);
-                    LsxTools lt = new LsxTools();
+                    LsxTools ls = ParentViewModel.ls;
 
                     //Mod Info
                     XElement moduleInfo = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModuleInfo");
                     List<XElement> els = moduleInfo.Elements().ToList();
 
-                    modData.Name = lt.GetAttributeByName(els, "Name");
-                    modData.UUID = lt.GetAttributeByName(els, "UUID");
-                    modData.Author = lt.GetAttributeByName(els, "Author");
-                    modData.Description = lt.GetAttributeByName(els, "Description");
-                    modData.Folder = lt.GetAttributeByName(els, "Folder");
-                    modData.MD5 = lt.GetAttributeByName(els, "MD5");
-                    modData.Type = lt.GetAttributeByName(els, "Type");
-                    modData.Version = lt.GetAttributeByName(els, "Version");
+                    modData.Name = ls.GetAttributeByName(els, "Name");
+                    modData.UUID = ls.GetAttributeByName(els, "UUID");
+                    modData.Author = ls.GetAttributeByName(els, "Author");
+                    modData.Description = ls.GetAttributeByName(els, "Description");
+                    modData.Folder = ls.GetAttributeByName(els, "Folder");
+                    modData.Tags = ls.GetAttributeByName(els, "Tags");
+                    modData.MD5 = ls.GetAttributeByName(els, "MD5");
+                    modData.Type = ls.GetAttributeByName(els, "Type");
+                    modData.Version = ls.GetAttributeByName(els, "Version");
 
                     //Target Modes
                     XElement targetModes = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "TargetModes");
@@ -453,7 +412,7 @@ namespace Dos2.ModManager.ViewModels
                     foreach (var item in modes)
                     {
                         var atts = item.Elements().ToList();
-                        string target = lt.GetAttributeByName(atts, "Object");
+                        string target = ls.GetAttributeByName(atts, "Object");
                         modData.TargetModes.Add(target);
                     }
 
@@ -465,7 +424,7 @@ namespace Dos2.ModManager.ViewModels
                         foreach (var item in deps)
                         {
                             var atts = item.Elements().ToList();
-                            string uuid = lt.GetAttributeByName(atts, "UUID");
+                            string uuid = ls.GetAttributeByName(atts, "UUID");
                             modData.Dependencies.Add(uuid);
                         }
                     }
@@ -482,17 +441,56 @@ namespace Dos2.ModManager.ViewModels
         }
 
 
+        #endregion
+
+        /// <summary>
+        /// Applies Profile Settings to ModList
+        /// </summary>
+        #region Appply Mod Settings
+        /// <summary>
+        /// Change Load Order and enables mods depending on active profile
+        /// </summary>
+        public void ApplyModSettings(Dos2ModsSettings activeSettings)
+        {
+            //Dos2ModsSettings activeSettings = ParentViewModel.Profiles.FirstOrDefault(x => x.IsActive);
+            foreach (var mod in ModsList)
+            {
+                mod.IsEnabled = activeSettings.ActiveMods.Contains(mod.UUID);
+                //find index of mod by UUID
+                mod.LoadOrder = activeSettings.ModLoadOrder.FindIndex(x => x == mod.UUID);
+            }
+            var uncategorized = ModsList.Where(x => x.LoadOrder < 0).ToList();
+            foreach (var item in uncategorized)
+            {
+                // give highest load order index 
+                int maxLoadOrder = ModsList.Max(x => x.LoadOrder);
+                item.LoadOrder = maxLoadOrder + 1;
+            }
+
+            SortCollectionByProperty("LoadOrder");
+        }
+
+        private void SortCollectionByProperty(string prop)
+        {
+            ModsCollectionView.CommitEdit();
+
+            ModsCollectionView.SortDescriptions.Clear();
+            ModsCollectionView.SortDescriptions.Add(new SortDescription(prop, ListSortDirection.Ascending));
+        }
 
         #endregion
 
-
-
-
+        /// <summary>
+        /// Drag and drop inside mods list
+        /// </summary>
         #region Drag and Drop Implementation
         void IDropTarget.DragOver(IDropInfo dropInfo)
         {
             Dos2Mod sourceItem = dropInfo.Data as Dos2Mod;
             Dos2Mod targetItem = dropInfo.TargetItem as Dos2Mod;
+
+            if (!ParentViewModel.IsInitialized)
+                return;
 
             if (sourceItem != null && targetItem != null)
             {
@@ -511,7 +509,9 @@ namespace Dos2.ModManager.ViewModels
             var sourceIndex = dropInfo.DragInfo.SourceIndex;
             insertIndex = Math.Min(insertIndex, ModsList.Count - 1);
 
-            
+            if (!ParentViewModel.IsInitialized)
+                return;
+
             if (insertIndex < sourceIndex) //move up
             {
                 List<Dos2Mod> higher = ModsList.Where(x => x.LoadOrder >= insertIndex && x.LoadOrder < sourceIndex).ToList();

@@ -14,7 +14,7 @@ namespace Dos2.ModManager.ViewModels
 {
     public class UtilitiesViewModel : ViewModel
     {
-        public string URLGithub { get; }  = "https://github.com/rfuzzo/Witcher-3-ModKit-UI";
+        public string URLGithub { get; }  = "https://github.com/rfuzzo/Dos2.ModManager";
         public Version Version { get; set; }  = Assembly.GetExecutingAssembly().GetName().Version;
 
         public ICommand OpenGithubCommand { get; }

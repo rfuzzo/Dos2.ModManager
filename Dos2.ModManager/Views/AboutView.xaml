@@ -80,7 +80,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Vertical">
-            <Image Source="/Dos2.ModManager;component/Resources/Icons/modkitUIIcon.ico" 
+            <Image Source="/Dos2.ModManager;component/Resources/fane.png" 
                    Stretch="Fill"
                    Height="50"
                    Width="50"

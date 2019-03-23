@@ -8,15 +8,7 @@ using System.Threading.Tasks;
 
 namespace Dos2.ModManager.Models
 {
-    public struct ModuleShortDesc
-    {
-        public string Folder { get; set; }
-        public string MD5 { get; set; }
-        public string Name { get; set; }
-        public string UUID { get; set; }
-        public string Version { get; set; }
-    }
-
+   
 
     public class Dos2ModsSettings
     {
@@ -77,9 +69,11 @@ namespace Dos2.ModManager.Models
 
         //Meta Data
 
-        [ReadOnlyAttribute(false)]
+        [BrowsableAttribute(false)]
         [CategoryAttribute("Meta")]
         private bool _isEnabled;
+
+        [ReadOnlyAttribute(false)]
         [CategoryAttribute("Meta")]
         public bool IsEnabled
         {
@@ -96,41 +90,54 @@ namespace Dos2.ModManager.Models
         [ReadOnlyAttribute(true)]
         [CategoryAttribute("Meta")]
         public int LoadOrder { get; set; }
+        [ReadOnlyAttribute(true)]
         [CategoryAttribute("Meta")]
         public List<string> Files { get; set; }
 
 
         //Hidden
         [CategoryAttribute("Meta")]
+        [ReadOnlyAttribute(true)]
         [BrowsableAttribute(false)]
         public string Category { get; set; }
         [CategoryAttribute("Meta")]
+        [ReadOnlyAttribute(true)]
         [BrowsableAttribute(false)]
         public bool IsUpdated { get; set; }
         [CategoryAttribute("Meta")]
+        [ReadOnlyAttribute(true)]
         [BrowsableAttribute(false)]
         public bool HasUnsavedChanges { get; set; }
         [CategoryAttribute("Meta")]
+        [ReadOnlyAttribute(true)]
         [BrowsableAttribute(false)]
         public string PakPath { get; set; }
 
 
         //Mod Data
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string Name { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string UUID { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string Author { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string Description { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string Folder { get; set; }
-        //[CategoryAttribute("Mod")]
-        //public string Tags { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
+        public string Tags { get; set; }
+        [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string Type { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
 
         public string Version { get; set; }
 
@@ -141,13 +148,16 @@ namespace Dos2.ModManager.Models
         //public string PhotoBooth { get; set; }
         //public string NumPlayers { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         public string MD5 { get; set; }
         //public string GMTemplate { get; set; }
 
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         //[TypeConverter(typeof(ListConverter))]
         public List<string> TargetModes { get; set; }
         [CategoryAttribute("Mod")]
+        [ReadOnlyAttribute(true)]
         //[TypeConverter(typeof(ListConverter))]
         public List<string> Dependencies { get; set; }
 

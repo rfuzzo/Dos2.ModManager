@@ -51,7 +51,9 @@
             AlternatingRowBackground="Gainsboro"  AlternationCount="2"
             AutoGenerateColumns="False"
             
-                  >
+            
+            CanUserAddRows="False" SelectedIndex="0" CellEditEnding="_workspaceDataGrid_CellEditEnding"
+            >
 
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn  Header="Enabled" 
@@ -66,16 +68,21 @@
                      Width="SizeToCells" 
                      IsReadOnly="True"
                      Binding="{Binding Author}"/>
-                
-                <DataGridTextColumn  Header="Version" 
-                     Width="SizeToCells" 
-                     IsReadOnly="True"
-                     Binding="{Binding Version}"/>
 
                 <DataGridTextColumn  Header="LoadOrder" 
                      Width="SizeToCells" 
                      IsReadOnly="True"
                      Binding="{Binding LoadOrder}"/>
+
+                <DataGridTextColumn  Header="Version" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding Version}"/>
+
+                <DataGridTextColumn  Header="Tags" 
+                     Width="SizeToCells" 
+                     IsReadOnly="True"
+                     Binding="{Binding Tags}"/>
 
             </DataGrid.Columns>
         </DataGrid>

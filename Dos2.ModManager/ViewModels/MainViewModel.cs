@@ -19,6 +19,8 @@ using Dos2.ModManager.Commands;
 using Dos2.ModManager.Models;
 using System.Xml.Linq;
 using System.Xml;
+using System.Windows;
+using System.Diagnostics;
 
 namespace Dos2.ModManager.ViewModels
 {
@@ -49,27 +51,6 @@ namespace Dos2.ModManager.ViewModels
                 }
             }
         }
-
-        private ICollection<WorkspaceViewModel> _documentsSource;
-        /// <summary>
-        /// Holds all the currently open documents in the project.
-        /// </summary>
-        public ICollection<WorkspaceViewModel> DocumentsSource
-        {
-            get
-            {
-                return _documentsSource;
-            }
-            set
-            {
-                if (_documentsSource != value)
-                {
-                    _documentsSource = value;
-                    InvokePropertyChanged();
-                }
-            }
-        }
-
 
         private ICollection<DockableViewModel> _anchorablesSource;
         /// <summary>
@@ -198,6 +179,9 @@ namespace Dos2.ModManager.ViewModels
             }
         }
         public DivineTaskHandler DivineTaskHandler { get; set; }
+        public LsxTools ls { get; set; }
+        public bool IsInitialized { get; set; }
+        
         #endregion
 
         #region ViewModels
@@ -258,34 +242,55 @@ namespace Dos2.ModManager.ViewModels
         }
         public bool CanSave()
         {
-            return true;
+            return IsInitialized;
         }
         public void Save()
         {
             Dos2.ModManager.Properties.Settings.Default.Save();
 
-            LsxTools ls = new LsxTools();
-            ls.SaveModSettings(ActiveProfile, ModsList.ToList());
-
+            MessageBoxResult result = MessageBox.Show(
+                    "Save current load order? This operation cannot be undone.",
+                    "Save Load Order?", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.OK)
+            {
+                ls.SaveModSettings(ActiveProfile, ModsList.ToList());
+            }
+            else
+            {
+                MessageBoxResult viper = MessageBox.Show("You'll coward don't even smoke crack.");
+                // do noting
+            }
         }
 
         
 
         public bool CanRefresh()
         {
-            return true;
+            return IsInitialized;
         }
         public void Refresh()
         {
-            throw new NotImplementedException();
+
+            IsInitialized = false;
+
+            bool initProfiles = GetProfileInfo();
+            if (initProfiles)
+            {
+                WorkspaceViewModel wvm = (WorkspaceViewModel)AnchorablesSource.First(x => x.ContentId == "mods");
+                //FIXME check for updates
+                wvm.GetModDataAsync();
+            }
+            
+            
+
         }
         public bool CanRunGame()
         {
-            return true;
+            return IsInitialized;
         }
         public void RunGame()
         {
-            throw new NotImplementedException();
+            Process.Start(Dos2.ModManager.Properties.Settings.Default.Dos2);
         }
         
         
@@ -373,52 +378,49 @@ namespace Dos2.ModManager.ViewModels
             LocateGameCommand = new RelayCommand(LocateGame, CanLocateGame);
             #endregion
 
-            // core logic
             ModsList = Properties.Settings.Default.ModList;
             DivineTaskHandler = new DivineTaskHandler(Properties.Settings.Default.Divine);
             Logger = DivineTaskHandler.Logger;
             Profiles = new ObservableCollection<Dos2ModsSettings>();
+            ls = new LsxTools();
 
-            //Get Profile Info
+            // Get Profile Info
             // FIXME check for changes
-            GetProfileInfo();
-
-
-            // Layout
-            AnchorablesSource = new ObservableCollection<DockableViewModel>()
+            bool initProfiles =  GetProfileInfo();
+            //check if any profiles were loaded 
+            // FIXME get all profiles and check if they were loaded
+            // FIXME handle the case where profiles are messed up better
+            if (initProfiles)
             {
+                // Layout
+                // mod list is generated in WorkspaceViewModel
+                AnchorablesSource = new ObservableCollection<DockableViewModel>()
+                {
 
-                new WorkspaceViewModel(this)
-                {
-                    Title = "Mods",
-                    ContentId = "mods",
-                },
-                new ConflictsViewModel(this)
-                {
-                    Title = "Conflicts List",
-                    ContentId = "conflicts",
-                },
-                new LogViewModel()
-                {
-                    Title = "Log",
-                    ContentId = "log",
-                    ParentViewModel = this,
-                },
-                new PropertiesViewModel()
-                {
-                    Title = "Properties",
-                    ContentId = "properties",
-                    ParentViewModel = this,
-                },
-               
-
-            };
-            DocumentsSource = new ObservableCollection<WorkspaceViewModel>
-            {
-               
-                
-
-            };
+                    new WorkspaceViewModel(this)
+                    {
+                        Title = "Mods",
+                        ContentId = "mods",
+                    },
+                    new ConflictsViewModel(this)
+                    {
+                        Title = "Conflicts List",
+                        ContentId = "conflicts",
+                    },
+                    new LogViewModel()
+                    {
+                        Title = "Log",
+                        ContentId = "log",
+                        ParentViewModel = this,
+                    },
+                    new PropertiesViewModel()
+                    {
+                        Title = "Properties",
+                        ContentId = "properties",
+                        ParentViewModel = this,
+                    },
+                };
+            }
         }
 
         private void ChangeActiveProfile(Dos2ModsSettings profile)
@@ -429,7 +431,7 @@ namespace Dos2.ModManager.ViewModels
             Profiles.FirstOrDefault(x => x.UUID == id).IsActive = true;
 
             //write to the lsb
-            // FIXME
+            // FIXME I don't want this here
 
             //go into workspace view model and apply view
             if (AnchorablesSource != null)
@@ -437,7 +439,7 @@ namespace Dos2.ModManager.ViewModels
                 WorkspaceViewModel wvm = (WorkspaceViewModel)AnchorablesSource.First(x => x.ContentId == "mods");
                 if (wvm != null)
                 {
-                    wvm.ApplyModSettings(); 
+                    wvm.ApplyModSettings(ActiveProfile); 
                 }
             }
         }
@@ -452,108 +454,99 @@ namespace Dos2.ModManager.ViewModels
         /// </summary>
         /// <param name="activeProfileID"></param>
         /// <returns></returns>
-        private void GetProfileInfo()
+        private bool GetProfileInfo()
         {
-           
-
             Profiles.Clear(); //FIXME check for changes
 
             //get active profile ID
             string profileDir = Path.Combine(Path.GetDirectoryName(Dos2.ModManager.Properties.Settings.Default.Mods), @"PlayerProfiles");
             string fileName = Path.Combine(profileDir, @"playerprofiles.lsb");
-            string activeProfileID = hack_ExtractSingleUUID(fileName);
+            DOS2_UserProfiles playerProfile = ls.GetActiveProfile(fileName);
 
-            //get data from profiles
-            var profileDirList = Directory.GetDirectories(profileDir).ToList();
-            foreach (var dir in profileDirList)
+            //checks
+            if (!File.Exists(fileName) || playerProfile == null || String.IsNullOrEmpty(playerProfile.ActiveProfile))
             {
-                var profile = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("profile.lsb"));
-                string id = hack_ExtractSingleUUID(profile);
-
-                //Get profile Info for Mods
-                var settings = new Dos2ModsSettings()
-                {
-                    Name = Path.GetFileNameWithoutExtension(dir),
-                    UUID = id,
-                    IsActive = (id == activeProfileID)
-                };
-
-                //read modsettings file
-                var modsettings = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("modsettings.lsx"));
+                MessageBoxResult result = MessageBox.Show(
+                    "No active profile found. Please check your paths or start the game once.",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            else if (!Directory.Exists(profileDir) || !Directory.GetDirectories(profileDir).ToList().Any())
+            {
+                MessageBoxResult result = MessageBox.Show(
+                   "No profile data found. Please check your paths or start the game once.",
+                   "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            else
+            {
+                //get data from profiles
                 try
                 {
-                    using (XmlReader xmlReader = XmlReader.Create(modsettings))
+                    var profileDirList = Directory.GetDirectories(profileDir).ToList();
+                    foreach (var dir in profileDirList)
                     {
-                        XDocument xml = XDocument.Load(xmlReader);
-                        LsxTools lt = new LsxTools();
+                        var profile = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("profile.lsb"));
+                        DOS2_PlayerProfile pp = ls.GetProfile(profile);
+                        if (pp == null || String.IsNullOrEmpty(pp.PlayerProfileID))
+                            continue;
 
-                        //Mod Order
-                        XElement modOrder = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModOrder");
-                        if (modOrder.HasElements)
+                        //Get profile Info for Mods
+                        var settings = new Dos2ModsSettings()
                         {
-                            var children = modOrder.Elements().First().Elements().ToList();
-                            foreach (var module in children)
+                            Name = Path.GetFileNameWithoutExtension(dir),
+                            UUID = pp.PlayerProfileID,
+                            IsActive = (pp.PlayerProfileID == playerProfile.ActiveProfile)
+                        };
+
+                        //read modsettings file
+                        var modsettings = Directory.GetFiles(dir).FirstOrDefault(x => Path.GetFileName(x).Equals("modsettings.lsx"));
+                   
+                        using (XmlReader xmlReader = XmlReader.Create(modsettings))
+                        {
+                            XDocument xml = XDocument.Load(xmlReader);
+                            LsxTools lt = new LsxTools();
+
+                            //Mod Order
+                            XElement modOrder = xml.Descendants("node").FirstOrDefault(x => x.Attribute("id").Value == "ModOrder");
+                            if (modOrder.HasElements)
                             {
-                                var atts = module.Elements().ToList();
-                                string modID = lt.GetAttributeByName(atts, "UUID");
-                                settings.ModLoadOrder.Add(modID);
+                                var children = modOrder.Elements().First().Elements().ToList();
+                                foreach (var module in children)
+                                {
+                                    var atts = module.Elements().ToList();
+                                    string modID = lt.GetAttributeByName(atts, "UUID");
+                                    settings.ModLoadOrder.Add(modID);
+                                }
+                            }
+
+                            //Active Mods
+                            var activeMods = xml.Descendants("node").Where(x => x.Attribute("id").Value == "ModuleShortDesc").ToList();
+                            if (activeMods.Any())
+                            {
+                                foreach (var item in activeMods)
+                                {
+                                    var atts = item.Elements().ToList();
+                                    string modID = lt.GetAttributeByName(atts, "UUID");
+                                    settings.ActiveMods.Add(modID);
+                                }
                             }
                         }
-
-                        //Active Mods
-                        var activeMods = xml.Descendants("node").Where(x => x.Attribute("id").Value == "ModuleShortDesc").ToList();
-                        if (activeMods.Any())
-                        {
-                            foreach (var item in activeMods)
-                            {
-                                var atts = item.Elements().ToList();
-                                string modID = lt.GetAttributeByName(atts, "UUID");
-                                settings.ActiveMods.Add(modID);
-                            }
-                        }
+                        Profiles.Add(settings);
                     }
+                    return true;
                 }
                 catch (Exception e)
                 {
-                    throw;
-                }
-
-                Profiles.Add(settings);
-            }
-        }
-        /// <summary>
-        /// a hack to quickly extract one UUID from an lsb without converting to lsx.
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
-        private string hack_ExtractSingleUUID(string file)
-        {
-            string uuid = "";
-
-            if (File.Exists(file))
-            {
-                using (BinaryReader br = new BinaryReader(File.Open(file, FileMode.Open)))
-                {
-                    var bytes = br.ReadBytes((int)br.BaseStream.Length);
-
-                    string utf8 = System.Text.Encoding.UTF8.GetString(bytes);
-                    var dashes = utf8.Count(f => f == '-');
-                    if (dashes == 4)
-                    {
-                        uuid = utf8.Substring(utf8.IndexOf('-') - 8, 36);
-                    }
-                    else if (dashes < 4)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
+                    MessageBoxResult result = MessageBox.Show(
+                   "Something went wrong when trying to load profile data. Please check your paths or start the game once.",
+                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                    //throw;
                 }
             }
-            return uuid;
         }
+        
         #endregion
 
 

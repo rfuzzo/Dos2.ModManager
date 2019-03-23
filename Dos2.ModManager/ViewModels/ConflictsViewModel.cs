@@ -34,56 +34,71 @@ namespace Dos2.ModManager.ViewModels
 
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private ObservableCollection<Dos2Conflict> GetConflicts()
         {
-            //List<string> HigherConflicts = new List<string>();
-            //List<string> LowerConflicts = new List<string>();
 
             ObservableCollection<Dos2Conflict> ret = new ObservableCollection<Dos2Conflict>();
 
+            //checks
             Dos2Mod mod = ParentViewModel.ActiveProperty;
             if (mod == null)
                 return ret;
             if (!mod.IsEnabled)
                 return ret;
+            if (!ParentViewModel.IsInitialized)
+                return ret;
 
-            List<Dos2Mod> activeMods = ParentViewModel.ModsList.Where(x => x.IsEnabled).ToList();
-            List<Dos2Mod> othermods = activeMods.Where(x => x.UUID != mod.UUID).ToList();
-            //List<string> allotherfiles = new List<string>();
-
-
-            foreach (Dos2Mod mod2compare in othermods)
+            try
             {
-                foreach (string file in mod.Files)
+                List<Dos2Mod> activeMods = ParentViewModel.ModsList.Where(x => x.IsEnabled).ToList();
+                List<Dos2Mod> othermods = activeMods.Where(x => x.UUID != mod.UUID).ToList();
+
+
+                foreach (Dos2Mod mod2compare in othermods)
                 {
-                    string[] hidden = new string[] { "Assets", "Content" };
-
-                    string first = file.Split('/').First();
-                    if (hidden.Contains(first))
+                    foreach (string file in mod.Files)
                     {
-                        continue;
-                    }
+                        string[] hidden = new string[] { "Assets", "Content" };
 
-
-                    if (mod2compare.Files.Contains(file))
-                    {
-                        string type = "";
-                        if (mod2compare.LoadOrder > mod.LoadOrder)
-                            type = "Higher Conflicts";
-                        else
-                            type = "Lower Conflicts";
-
-                        Dos2Conflict conf = new Dos2Conflict
+                        string first = file.Split('/').First();
+                        if (hidden.Contains(first))
                         {
-                            Name = file,
-                            ModID = mod2compare.Name,
-                            Type = type,
-                        };
-                        ret.Add(conf);
-                    }
-                }
+                            continue;
+                        }
 
+
+                        if (mod2compare.Files.Contains(file))
+                        {
+                            string type = "";
+                            if (mod2compare.LoadOrder > mod.LoadOrder)
+                                type = "Higher Conflicts";
+                            else
+                                type = "Lower Conflicts";
+
+                            Dos2Conflict conf = new Dos2Conflict
+                            {
+                                Name = file,
+                                ModID = mod2compare.Name,
+                                Type = type,
+                            };
+                            ret.Add(conf);
+                        }
+                    }
+
+                }
             }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            
             return ret;
         }
 
@@ -118,51 +133,13 @@ namespace Dos2.ModManager.ViewModels
         {
             ParentViewModel = vm;
 
-            //ConflictsList = new ObservableCollection<Dos2Conflict>();
             SelectedMods = new ObservableCollection<Dos2Mod>();
-
-            //populate conflicts list
-            //RegenerateConflictsList();
-            
-
-
 
         }
 
         public void RegenerateConflictsList()
         {
             ConflictsList = GetConflicts();
-            
-            
-            /*ConflictsList.Clear();
-            var modlist = Properties.Settings.Default.ModList;
-
-            List<Dos2Mod> activeMods = modlist.Where(x => x.IsEnabled).ToList();
-            foreach (Dos2Mod mod in activeMods)
-            {
-                List<Dos2Mod> othermods = activeMods.Where(x => x.UUID != mod.UUID).ToList();
-                List<string> allotherfiles = new List<string>();
-                foreach (var item in othermods)
-                {
-                    allotherfiles.AddRange(item.Files);
-                    allotherfiles = allotherfiles.Distinct().ToList();
-                }
-
-                foreach (string file in mod.Files)
-                {
-
-                    if (allotherfiles.Contains(file))
-                    {
-                        Dos2Conflict conf = new Dos2Conflict
-                        {
-                            Name = file,
-                            ModID = mod.Name
-                        };
-                        ConflictsList.Add(conf);
-                    }
-                }
-
-            }*/
         }
     }
 }
