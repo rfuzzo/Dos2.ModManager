@@ -15,19 +15,17 @@ namespace Dos2.ModManager
        [global::System.Configuration.SettingsSerializeAs(System.Configuration.SettingsSerializeAs.Binary)]
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public System.Collections.ObjectModel.ObservableCollection<Wcc_lite_core.WccLite_Command> WccLite_Commands
+        public System.Collections.ObjectModel.ObservableCollection<Models.Dos2Mod> ModList
         {
             get
             {
-                return ((System.Collections.ObjectModel.ObservableCollection<Wcc_lite_core.WccLite_Command>)(this["WccLite_Commands"]));
+                return ((System.Collections.ObjectModel.ObservableCollection<Models.Dos2Mod>)(this["ModList"]));
             }
             set
             {
-                this["WccLite_Commands"] = value;
+                this["ModList"] = value;
             }
         }
-
-
         */
 
 

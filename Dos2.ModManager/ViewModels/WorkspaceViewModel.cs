@@ -329,6 +329,10 @@ namespace Dos2.ModManager.ViewModels
             }
             catch (Exception e)
             {
+                MessageBoxResult result = MessageBox.Show(
+                  "Something wrent wrong when trying to get mod files lists. Please check your paths.",
+                  "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ParentViewModel.Logger.Status = "Finished With Errors.";
 
                 ParentViewModel.Logger.LogString("Something wrent wrong when trying to get mod files lists.");
                 ParentViewModel.Logger.LogString(e.ToString());
